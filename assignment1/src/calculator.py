@@ -61,7 +61,10 @@ class Calculator():
 	c = int(op_func(a, b)) # some operators (i.e., "<" and ">" return "True" or "False"; so parse it to int
 	# and push the result onto the data stack
 	self.data.push(c)
-   
+     elif token == "~":
+	# negation
+	val = util.parse_int(self.data.pop())
+	self.data.push(-val)	
   # operator "/"
   def div(self, a, b):
     return self.op_div(operator.div, a, b)
