@@ -8,7 +8,11 @@ class TestCalculator(unittest.TestCase):
     self.calculator = calculator.Calculator()
     
   def test_printState(self):
-    self.calculator.push_code("1 2 3")
+    self.calculator.push_code("1 1 =")
+    print "Before:"
+    self.calculator.print_state()
+    self.calculator.execute()
+    print "After:"
     self.calculator.print_state()
     
 if __name__ == '__main__':
