@@ -56,15 +56,22 @@ class Calculator():
 	  #check that they are integers
 	  util.expectInt(a)
 	  util.expectInt(b)
-
-	# apply the operator...
-	c = int(op_func(a, b)) # some operators (i.e., "<" and ">" return "True" or "False"; so parse it to int
-	# and push the result onto the data stack
-	self.data.push(c)
-     elif token == "~":
+	  # apply the operator...
+	  c = int(op_func(a, b)) # some operators (i.e., "<" and ">" return "True" or "False"; so parse it to int
+	  # and push the result onto the data stack
+	  self.data.push(c)
+      elif token == "~":
 	# negation
 	val = util.parse_int(self.data.pop())
 	self.data.push(-val)	
+      elif token == "c":
+	# copy operator
+	idx = self.data.peek() #can't use pop to get parameter n, because copy might want to use the 1st element
+	util.expectPosIntSmallerThan(idx, self.data.size())
+	val = self.data[self.data.size() - idx] #get the value at stack depth n
+	self.data.pop() #pop parameter n
+	self.data.push(val) #push the new value
+      
   # operator "/"
   def div(self, a, b):
     return self.op_div(operator.div, a, b)
