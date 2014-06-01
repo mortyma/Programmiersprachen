@@ -20,6 +20,11 @@ class TestCalculator(unittest.TestCase):
     self.assertEqual(5, self.calculator.data.size())
     self.assertEqual(13, self.calculator.data.pop())
     
+  def test_copy3_idxOutOrRange(self):
+    self.calculator.push_code("11 12 13 14 42 c")
+    self.assertRaises(ValueError, self.calculator.execute)
+    
+    
   # print the calculator's state before and after execution
   def debug_exec(self):
     print "Before:"
