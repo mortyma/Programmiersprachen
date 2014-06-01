@@ -7,24 +7,37 @@ class TestCalculator(unittest.TestCase):
   def setUp(self):
     self.calculator = calculator.Calculator()
     
-  # 
+  # test copy operator
   def test_copy1(self):
     self.calculator.push_code("11 12 13 14 1 c")
     self.calculator.execute()
-    self.assertEqual(5, self.calculator.data.size())
-    self.assertEqual(1, self.calculator.data.pop())
+    self.assertEqual([11, 12, 13, 14, 1], self.calculator.data)
     
   def test_copy3(self):
     self.calculator.push_code("11 12 13 14 3 c")
     self.calculator.execute()
-    self.assertEqual(5, self.calculator.data.size())
-    self.assertEqual(13, self.calculator.data.pop())
+    self.assertEqual([11, 12, 13, 14, 13], self.calculator.data)
     
-  def test_copy3_idxOutOrRange(self):
+  def test_copy_idxOutOrRange(self):
     self.calculator.push_code("11 12 13 14 42 c")
     self.assertRaises(ValueError, self.calculator.execute)
     
+  # test delete operator
+  def test_delete1(self):
+    self.calculator.push_code("11 12 13 14 1 d")
+    self.calculator.execute()
+    self.assertEqual([11, 12, 13, 14], self.calculator.data)
     
+  def test_delete2(self):
+    self.calculator.push_code("11 12 13 14 2 d")
+    self.calculator.execute()
+    self.assertEqual([11, 12, 13], self.calculator.data)
+  
+  def test_delete_idxOutOrRange(self):
+    self.calculator.push_code("11 12 13 14 42 d")
+    self.assertRaises(ValueError, self.calculator.execute)
+
+  
   # print the calculator's state before and after execution
   def debug_exec(self):
     print "Before:"

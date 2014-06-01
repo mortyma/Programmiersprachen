@@ -71,6 +71,14 @@ class Calculator():
 	val = self.data[self.data.size() - idx] #get the value at stack depth n
 	self.data.pop() #pop parameter n
 	self.data.push(val) #push the new value
+      elif token == "d":
+	# delete operator
+	idx = self.data.peek() #can't use pop to get parameter n, because delete might want to use the 1st element
+	util.expectPosIntSmallerThan(idx, self.data.size())
+	val = self.data[self.data.size() - idx] #get the value at stack depth n
+	if(idx != 1):
+	  self.data.remove(idx)
+	self.data.pop() #pop parameter n
       
   # operator "/"
   def div(self, a, b):
