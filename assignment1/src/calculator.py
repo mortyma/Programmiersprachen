@@ -53,20 +53,22 @@ class Calculator():
         while i + 1 < len(s) and util.is_number(s[i + 1]):
           i = i + 1
           n = n * 10 + int(s[i])
-        self.code.append(n)
+        l.append(n)
       elif s[i] == "[":
         end = s.index("]")
         block = s[i:end + 1]
         i = end
-        self.code.append(block)
+        l.append(block)
       elif s[i] in self.validChars:
-        self.code.append(s[i])
+        l.append(s[i])
       elif s[i].isspace():
         pass
       else:
         msg = "Invalid code : " + s[i:]
         raise ValueError(msg)
       i = i + 1 
+    for i in reversed(l):
+      self.code.push(i)
   
   # execute the "program" on the code stack
   def execute(self):
@@ -131,6 +133,11 @@ class Calculator():
       elif token.startswith("[") and token.endswith("]"):
         # block
         self.data.push(token)
+      elif token == "a":
+        # apply
+        if self.is_block(self.data.peek()):
+          p = self.data.pop()
+          self.push_code(p[1:len(p) - 1])
       else:
         msg = "Unknown command: " + token
         raise ValueError(msg)
@@ -167,6 +174,11 @@ class Calculator():
   # then the result equals 1, otherwise 0
   def eq(self, a, b):
     return a == b #TODO: does this work for blocks?
+      
+  def is_block(self, b):
+    '''return true if b is a block'''
+    b = str(b)
+    return b.startswith("[") and b.endswith("]")
     
   # Print the state of the calculator
   # (same format as in the assignment specification)

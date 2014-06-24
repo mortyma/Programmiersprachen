@@ -25,6 +25,19 @@ class TestCalculator(unittest.TestCase):
     self.assertEqual([], self.calculator.code)
     self.assertEqual(["[2*]"], self.calculator.data)
     
+  # test the application operator
+  def test_apply_on_block(self):
+    self.calculator.push_code("3[2*]a")
+    self.calculator.execute()
+    self.assertEqual([], self.calculator.code)
+    self.assertEqual([6], self.calculator.data)
+  
+  def test_apply_on_non_block(self):
+    self.calculator.push_code("3a")
+    self.calculator.execute()
+    self.assertEqual([], self.calculator.code)
+    self.assertEqual([3], self.calculator.data)
+     
   # test copy operator
   def test_copy0(self):
     self.calculator.push_code("11 12 13 14 0 c")
