@@ -1,10 +1,10 @@
 #! /usr/bin/env python
 class Stack(list):
-  """A simple stack"""
+  """A simple stack. Top-most element is first element in the list."""
  
   # 
   def push(self, item):
-    self.append(item)
+    self.insert(0, item)
   
   # 
   def isEmpty(self):
@@ -14,11 +14,17 @@ class Stack(list):
   def size(self):
     return len(self)
   
-  #return the item on top of the stack, without popping it
+  # return the item on top of the stack, without popping it
   def peek(self):
-    return self[-1] # python magic: gets the last element in the list, which is the top element of the stack
+    return self[0]
+  
+  # remove element at position idx from the stack.
+  def remove(self, idx):
+    return super(Stack, self).pop(idx)
     
-  #pop is in list
+  # pop is in list
+  def pop(self):
+    return super(Stack, self).pop(0)
   
   # Contents of the stack as a string. 
   # Top-most element is first element in the string if reverse is False (default);
@@ -26,8 +32,8 @@ class Stack(list):
   # Elements are separated by space
   def toString(self, reverse = False):
     if(reverse):
-      l = self
-    else:
       l = reversed(self)
+    else:
+      l = self
     return ' '.join(str(p) for p in l)
  
