@@ -37,6 +37,11 @@ class TestCalculator(unittest.TestCase):
     self.calculator.push_code("11 12 13 14 42 d")
     self.assertRaises(ValueError, self.calculator.execute)
 
+  # test exit command "x"
+  def test_exit(self):
+    self.calculator.push_code("x 11 12 a")
+    self.calculator.execute()
+    self.assertEqual(["a", "12", "11"], self.calculator.code)
   
   # print the calculator's state before and after execution
   def debug_exec(self):

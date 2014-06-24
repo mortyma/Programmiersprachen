@@ -44,6 +44,9 @@ class Calculator():
       if util.is_number(token):
         # integers are simply pushed onto the data stack
         self.data.push(int(token))
+      elif token == "x":
+        # exit
+        return
       elif token in self.binaryOps.keys():
         # binary operators: {+,-,*,/,%,&,|,=,<,>}
         # pop to items from data stack 
