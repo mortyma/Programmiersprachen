@@ -28,7 +28,8 @@ class Calculator():
           }
     
   # push code onto the calculator's code stack
-  #
+  # commands assumed to be separated by whitespace
+  # Left-most command will be at the top of the stack
   def push_code(self, codeStr):
     # split the code by any whitespace
     tokens = codeStr.split() 
@@ -115,11 +116,4 @@ class Calculator():
   # Print the state of the calculator
   # (same format as in the assignment specification)
   def print_state(self):
-    # printing a list in python 2.7 is not that easy...
-    print self.code_to_string() + " ^ " + self.data_to_string()
-
-  def code_to_string(self):
-    return ' '.join(str(p) for p in self.data)
-    
-  def data_to_string(self):
-    return ' '.join(str(p) for p in reversed(self.code))
+    print self.data.toString(True) + " ^ " + self.code.toString()

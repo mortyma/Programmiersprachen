@@ -10,8 +10,10 @@ class TestStack(unittest.TestCase):
   def test_basicStack(self):
     self.stack.push(1)
     self.stack.push(2)
+    self.assertEqual("2 1", self.stack.toString())
     self.assertEqual(2, self.stack.pop())
     self.assertEqual(1, self.stack.pop())
+    
     
 if __name__ == '__main__':
   unittest.main()
