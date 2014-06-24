@@ -16,18 +16,19 @@ class Calculator():
     # set of binary operators 
     #set('+-*/%&|=<>')
     self.binaryOps = {"+": operator.add,
-		      "-": operator.sub,
-		      "*": operator.mul,
-		      "/": self.div,
-		      "%": self.mod,
-		      "&": self.land,
-		      "|": self.lor,
-		      "<": operator.lt,
-		      ">": operator.gt,
-		      "=": self.eq
-		      }
+          "-": operator.sub,
+          "*": operator.mul,
+          "/": self.div,
+          "%": self.mod,
+          "&": self.land,
+          "|": self.lor,
+          "<": operator.lt,
+          ">": operator.gt,
+          "=": self.eq
+          }
     
   # push code onto the calculator's code stack
+  #
   def push_code(self, codeStr):
     # split the code by any whitespace
     tokens = codeStr.split() 
@@ -40,45 +41,43 @@ class Calculator():
     while (not self.code.isEmpty()):
       token = self.code.pop()
       if util.is_number(token):
-	# integers are simply pushed onto the data stack
-	self.data.push(int(token))
+        # integers are simply pushed onto the data stack
+        self.data.push(int(token))
       elif token in self.binaryOps.keys():
-	# binary operators: {+,-,*,/,%,&,|,=,<,>}
-	# pop to items from data stack 
-	a = self.data.pop()
-	b = self.data.pop()
-	
-	# get the operator
-	op_func = self.binaryOps[token]
-	
-	# "=" does not requires a and b to be integers
-	if(token != "="):
-	  #check that they are integers
-	  util.expectInt(a)
-	  util.expectInt(b)
-	  # apply the operator...
-	  c = int(op_func(a, b)) # some operators (i.e., "<" and ">" return "True" or "False"; so parse it to int
-	  # and push the result onto the data stack
-	  self.data.push(c)
+        # binary operators: {+,-,*,/,%,&,|,=,<,>}
+        # pop to items from data stack 
+        a = self.data.pop()
+        b = self.data.pop()
+        # get the operator
+        op_func = self.binaryOps[token]
+        # "=" does not require a and b to be integers
+        if(token != "="):
+          #check that they are integers
+          util.expectInt(a)
+          util.expectInt(b)
+          # apply the operator...
+          c = int(op_func(a, b)) # some operators (i.e., "<" and ">" return "True" or "False"; so parse it to int
+          # and push the result onto the data stack
+          self.data.push(c)
       elif token == "~":
-	# negation
-	val = util.parse_int(self.data.pop())
-	self.data.push(-val)	
+        # negation
+        val = util.parse_int(self.data.pop())
+        self.data.push(-val)  
       elif token == "c":
-	# copy operator
-	idx = self.data.peek() #can't use pop to get parameter n, because copy might want to use the 1st element
-	util.expectPosIntSmallerThan(idx, self.data.size())
-	val = self.data[self.data.size() - idx] #get the value at stack depth n
-	self.data.pop() #pop parameter n
-	self.data.push(val) #push the new value
+        # copy operator
+        idx = self.data.peek() #can't use pop to get parameter n, because copy might want to use the 1st element
+        util.expectPosIntSmallerThan(idx, self.data.size())
+        val = self.data[self.data.size() - idx] #get the value at stack depth n
+        self.data.pop() #pop parameter n
+        self.data.push(val) #push the new value
       elif token == "d":
-	# delete operator
-	idx = self.data.peek() #can't use pop to get parameter n, because delete might want to use the 1st element
-	util.expectPosIntSmallerThan(idx, self.data.size())
-	val = self.data[self.data.size() - idx] #get the value at stack depth n
-	if(idx != 1):
-	  self.data.remove(idx)
-	self.data.pop() #pop parameter n
+        # delete operator
+        idx = self.data.peek() #can't use pop to get parameter n, because delete might want to use the 1st element
+        util.expectPosIntSmallerThan(idx, self.data.size())
+        val = self.data[self.data.size() - idx] #get the value at stack depth n
+        if(idx != 1):
+          self.data.remove(idx)
+        self.data.pop() #pop parameter n
       
   # operator "/"
   def div(self, a, b):
