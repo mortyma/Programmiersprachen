@@ -79,6 +79,9 @@ class Calculator():
         if(idx != 1):
           self.data.remove(idx)
         self.data.pop() #pop parameter n
+      else:
+        msg = "Unknown command: " + token
+        raise ValueError(msg)
       
   # operator "/"
   def div(self, a, b):
