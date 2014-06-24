@@ -1,11 +1,17 @@
 #! /usr/bin/env python
 import unittest
+
 import calculator
+import stream
 
 class TestCalculator(unittest.TestCase):
   
   def setUp(self):
-    self.calculator = calculator.Calculator()
+    self.iS = stream.Stream()
+    self.oS = stream.Stream()
+    self.iS.write(49)
+    self.iS.write(50)
+    self.calculator = calculator.Calculator(self.iS, self.oS)
     
   # test copy operator
   def test_copy0(self):
@@ -53,6 +59,23 @@ class TestCalculator(unittest.TestCase):
     self.calculator.execute()
     self.assertEqual(["11", "12", "a"], self.calculator.code)
   
+  # test write command
+  def test_write(self):
+    self.calculator.push_code("1 w 2 w")
+    self.calculator.execute()
+    self.assertEqual([], self.calculator.code)
+    self.assertEqual([49, 50], self.calculator.oS)
+    
+  #def test_write_invalidArg(self):
+    # TODO: for this we need to be able to push blocks onto the stacks
+    #self.calculator.push_code("[ 1 + ] w")
+  
+  # test read command
+  def test_read(self):
+    self.calculator.push_code("r r")
+    self.calculator.execute()
+    self.assertEqual([2, 1], self.calculator.data)
+    
   # print the calculator's state before and after execution
   def debug_exec(self):
     print "Before:"

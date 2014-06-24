@@ -1,7 +1,12 @@
 #! /usr/bin/env python
-import stack
-import util
 import operator
+
+from parser import *
+import stack
+import stream
+import util
+
+
 
 class Calculator():
   """The Calculator"""
@@ -9,12 +14,18 @@ class Calculator():
   NR_LINES = 25
   NR_COLUMNS = 80
     
-  def __init__(self):
+  def __init__(self, iS, oS):
     # code and data stack
-    self.code = stack.Stack()
+    # the stacks contain integers, characters (that represent operations) and blocks only
+    self.code = stack.Stack()   
     self.data = stack.Stack()
+    # input and output streams. Format: interger ascii codes (decimal).
+    # TODO: for now streams are just fifo-queues
+    self.iS = iS
+    self.oS = oS
+    #unary operators
+    self.unaryOps = ["~"]
     # set of binary operators 
-    #set('+-*/%&|=<>')
     self.binaryOps = {"+": operator.add,
           "-": operator.sub,
           "*": operator.mul,
@@ -26,6 +37,10 @@ class Calculator():
           ">": operator.gt,
           "=": self.eq
           }
+    # commands
+    self.commands = ["a", "c", "d", "r", "w", "b", "g", "x"]
+    # union of commands, unaryOps and binaryOps
+    self.validChars = self.unaryOps + self.binaryOps.keys() + self.commands
     
   # push code onto the calculator's code stack
   # commands assumed to be separated by whitespace
@@ -82,6 +97,21 @@ class Calculator():
         if(idx != 0):
           self.data.remove(idx)
         self.data.pop() #pop parameter n
+      elif token == "r":
+        # read from input stream 
+        item = chr(self.iS.read())
+        # only digits, commands and operators may be read 
+        if util.is_number(item):
+          self.data.push(util.parse_int(item))
+        elif item in self.validChars:
+          self.data.push(item)
+      elif token == "w":
+        # make sure that the top element of the data stack is an integer or a command
+        val = self.data.pop()
+        if not util.is_number(val) and val not in self.validChars:
+          raise ValueError("Cannot write to output stream" + val)
+        for byte in to_ascii(val):
+          self.oS.write(byte)
       else:
         msg = "Unknown command: " + token
         raise ValueError(msg)
@@ -118,7 +148,7 @@ class Calculator():
   # then the result equals 1, otherwise 0
   def eq(self, a, b):
     return a == b #TODO: does this work for blocks?
-  
+    
   # Print the state of the calculator
   # (same format as in the assignment specification)
   def print_state(self):
