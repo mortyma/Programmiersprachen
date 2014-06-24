@@ -13,6 +13,12 @@ class TestCalculator(unittest.TestCase):
     self.iS.write(50)
     self.calculator = calculator.Calculator(self.iS, self.oS)
     
+  # test pushing some code (including numbers, commands, operators and blocks
+  def test_push_block(self):
+    self.calculator.push_code("1 2+3c45d~<[678+]a")
+    self.assertEqual([1, 2, "+", 3, "c", 45, "d", "~", "<", "[678+]", "a"], self.calculator.code)
+    self.assertEqual([], self.calculator.data)
+    
   # test copy operator
   def test_copy0(self):
     self.calculator.push_code("11 12 13 14 0 c")
@@ -57,7 +63,7 @@ class TestCalculator(unittest.TestCase):
   def test_exit(self):
     self.calculator.push_code("x 11 12 a")
     self.calculator.execute()
-    self.assertEqual(["11", "12", "a"], self.calculator.code)
+    self.assertEqual([11, 12, "a"], self.calculator.code)
   
   # test write command
   def test_write(self):

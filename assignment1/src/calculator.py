@@ -43,14 +43,30 @@ class Calculator():
     self.validChars = self.unaryOps + self.binaryOps.keys() + self.commands
     
   # push code onto the calculator's code stack
-  # commands assumed to be separated by whitespace
   # Left-most command will be at the top of the stack
-  def push_code(self, codeStr):
-    # split the code by any whitespace
-    tokens = codeStr.split() 
-    tokens.reverse()
-    for p in tokens:
-      self.code.push(p)
+  def push_code(self, s):
+    i = 0
+    l = []
+    while i < len(s):
+      if util.is_number(s[i]):
+        n = int(s[i])
+        while i + 1 < len(s) and util.is_number(s[i + 1]):
+          i = i + 1
+          n = n * 10 + int(s[i])
+        self.code.append(n)
+      elif s[i] == "[":
+        end = s.index("]")
+        block = s[i:end + 1]
+        i = end
+        self.code.append(block)
+      elif s[i] in self.validChars:
+        self.code.append(s[i])
+      elif s[i].isspace():
+        pass
+      else:
+        msg = "Invalid code : " + s[i:]
+        raise ValueError(msg)
+      i = i + 1 
   
   # execute the "program" on the code stack
   def execute(self):
@@ -112,6 +128,9 @@ class Calculator():
           raise ValueError("Cannot write to output stream" + val)
         for byte in to_ascii(val):
           self.oS.write(byte)
+      elif token.startswith("[") and token.endswith("]"):
+        # block
+        self.data.push(token)
       else:
         msg = "Unknown command: " + token
         raise ValueError(msg)
