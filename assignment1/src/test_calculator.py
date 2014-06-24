@@ -19,6 +19,12 @@ class TestCalculator(unittest.TestCase):
     self.assertEqual([1, 2, "+", 3, "c", 45, "d", "~", "<", "[678+]", "a"], self.calculator.code)
     self.assertEqual([], self.calculator.data)
     
+  def test_push_block_onto_data(self):
+    self.calculator.push_code("[2*]")
+    self.calculator.execute()
+    self.assertEqual([], self.calculator.code)
+    self.assertEqual(["[2*]"], self.calculator.data)
+    
   # test copy operator
   def test_copy0(self):
     self.calculator.push_code("11 12 13 14 0 c")
@@ -81,6 +87,8 @@ class TestCalculator(unittest.TestCase):
     self.calculator.push_code("r r")
     self.calculator.execute()
     self.assertEqual([2, 1], self.calculator.data)
+    
+ 
     
   # print the calculator's state before and after execution
   def debug_exec(self):
