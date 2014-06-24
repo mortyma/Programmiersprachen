@@ -9,11 +9,6 @@ def is_number(val):
   except ValueError:
     return False
   
-# Parse val to an integer. 
-# Print an error and exit if this is not possible.
-def parse_int(val):
-  return int(val)
-
 # Test if the given value is boolean, i.e., 0 or 1
 # If val is not boolean, print an error message and exit. Otherwise, this method has no effect.
 def expectBool(val):

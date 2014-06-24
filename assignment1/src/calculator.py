@@ -80,7 +80,7 @@ class Calculator():
           self.data.push(c)
       elif token == "~":
         # negation
-        val = util.parse_int(self.data.pop())
+        val = int(self.data.pop())
         self.data.push(-val)  
       elif token == "c":
         # copy operator
@@ -102,7 +102,7 @@ class Calculator():
         item = chr(self.iS.read())
         # only digits, commands and operators may be read 
         if util.is_number(item):
-          self.data.push(util.parse_int(item))
+          self.data.push(int(item))
         elif item in self.validChars:
           self.data.push(item)
       elif token == "w":
