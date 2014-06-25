@@ -17,6 +17,7 @@ class Calculator():
   def __init__(self, iS, oS):
     # code and data stack
     # the stacks contain integers, characters (that represent operations) and blocks only
+    # the top-most element is at position 0
     self.code = stack.Stack()   
     self.data = stack.Stack()
     # input and output streams. Format: interger ascii codes (decimal).
@@ -43,7 +44,7 @@ class Calculator():
     self.validChars = self.unaryOps + self.binaryOps.keys() + self.commands
     
   # push code onto the calculator's code stack
-  # Left-most command will be at the top of the stack
+  # Left-most command will be at the top of the code stack
   def push_code(self, s):
     i = 0
     l = []
@@ -144,6 +145,36 @@ class Calculator():
         if self.is_block(self.data.peek()):
           p = self.data.pop()
           self.push_code(p[1:len(p) - 1])
+      elif token == "g":
+        # group
+        arg1 = self.data.pop() # the argument on top of the stack will be at the end of the block
+        arg2 = self.data.pop()
+        if self.is_block(arg1) and self.is_block(arg2):
+          # two blocks
+          block =  arg2[0:len(arg2) - 1]
+          arg1 = arg1[1:len(arg1)]
+          if util.is_number(arg2[len(arg1) - 1]) and util.is_number(arg1[0]):
+            block += " "
+          block += arg1
+        elif util.is_number(arg1) and util.is_number(arg2):
+          # two integers
+          block = "[" + str(arg2) + " " + str(arg1) + "]"
+        elif util.is_number(arg2) and self.is_block(arg1):
+          # interger (arg2) and block (arg1)
+          block = "[" + str(arg2)
+          arg1 = arg1[1:len(arg1)]
+          if util.is_number(arg1[0]):
+            block += " "
+          block += arg1
+        elif self.is_block(arg2) and util.is_number(arg1):
+          # block (arg2) and integer (arg1)
+          block =  arg2[0:len(arg2) - 1]
+          if util.is_number(arg2[len(arg2) - 1]) and util.is_number(arg1[0]):
+            block += " "
+          block += str(arg1) + "]"
+        else:
+          raise ValueError("todo")
+        self.data.push(block)
       else:
         msg = "Unknown command: " + token
         raise ValueError(msg)

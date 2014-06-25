@@ -38,10 +38,10 @@ class TestCalculator(unittest.TestCase):
     
   # test the application operator
   def test_apply_on_block(self):
-    self.calculator.push_code("3[2*]a")
+    self.calculator.push_code("1[3-]a")
     self.calculator.execute()
     self.assertEqual([], self.calculator.code)
-    self.assertEqual([6], self.calculator.data)
+    self.assertEqual([2], self.calculator.data)
   
   def test_apply_on_non_block(self):
     self.calculator.push_code("3a")
@@ -112,6 +112,39 @@ class TestCalculator(unittest.TestCase):
     self.calculator.push_code("r r")
     self.calculator.execute()
     self.assertEqual([2, 1], self.calculator.data)
+
+  # test group command
+  def test_group_two_blocks(self):
+    self.calculator.push_code("[1+][2*]g")
+    self.calculator.execute()
+    self.assertEqual(["[1+2*]"], self.calculator.data)
+    
+  def test_group_block_and_int(self):
+    self.calculator.push_code("[1*]2g")
+    self.calculator.execute()
+    self.assertEqual(["[1*2]" ""], self.calculator.data)
+  
+  def test_group_int_and_block(self):
+    self.calculator.push_code("1[2*]g")
+    self.calculator.execute()
+    self.assertEqual(["[1 2*]"], self.calculator.data)
+     
+  def test_group_two_ints(self):
+    self.calculator.push_code("1 2g")
+    self.calculator.execute()
+    self.assertEqual(["[1 2]"], self.calculator.data)
+    
+  def test_group_example1(self):
+     #"1 3ga-" has to give the same as "1 3-", i.e., 1 (TODO: recheck this)
+    self.calculator.push_code("1 3g")
+    self.calculator.execute()
+    self.assertEqual(["[1 3]"], self.calculator.data)
+    self.calculator.push_code("a")
+    self.calculator.execute()
+    self.assertEqual([3, 1], self.calculator.data)
+    self.calculator.push_code("-")
+    self.calculator.execute()
+    self.assertEqual([2], self.calculator.data)
     
   # print the calculator's state before and after execution
   def debug_exec(self):
