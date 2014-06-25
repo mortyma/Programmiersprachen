@@ -103,7 +103,6 @@ class TestCalculator(unittest.TestCase):
     self.assertEqual([49, 50], self.calculator.oS)
     
   def test_write_invalidArg(self):
-    # TODO: for this we need to be able to push blocks onto the stacks
     self.calculator.push_code("[1+]w")
     self.assertRaises(ValueError, self.calculator.execute)
   
