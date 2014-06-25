@@ -9,7 +9,7 @@ class TestCalculator(unittest.TestCase):
   def setUp(self):
     self.iS = stream.Stream()
     self.oS = stream.Stream()
-    self.iS.write(49)
+    self.iS.write(ord("*")) 
     self.iS.write(50)
     self.calculator = calculator.Calculator(self.iS, self.oS)
     
@@ -111,7 +111,7 @@ class TestCalculator(unittest.TestCase):
   def test_read(self):
     self.calculator.push_code("r r")
     self.calculator.execute()
-    self.assertEqual([2, 1], self.calculator.data)
+    self.assertEqual([2, "*"], self.calculator.data)
 
   # test group command
   def test_group_two_blocks(self):
@@ -145,7 +145,22 @@ class TestCalculator(unittest.TestCase):
     self.calculator.push_code("-")
     self.calculator.execute()
     self.assertEqual([2], self.calculator.data)
+   
+  # text build
+  def test_build_block_from_block(self):
+    self.calculator.push_code("[2*]b")
+    self.calculator.execute()
+    self.assertEqual(["[[2*]]"], self.calculator.data)
+   
+  def test_build_block_from_operator(self):
+    self.calculator.push_code("rb")
+    self.calculator.execute()
+    self.assertEqual(["[*]"], self.calculator.data) 
     
+  def test_build_block_from_int(self):
+    self.calculator.push_code("1b")
+    self.assertRaises(ValueError, self.calculator.execute)
+   
   # print the calculator's state before and after execution
   def debug_exec(self):
     print "Before:"

@@ -175,6 +175,12 @@ class Calculator():
         else:
           raise ValueError("todo")
         self.data.push(block)
+      elif token == "b":
+        arg = self.data.pop()
+        if self.is_block(arg) or arg in self.operations:
+          self.data.push("[" + arg + "]")
+        else:
+          raise ValueError("Invalid argument for operation 'build block':" + str(arg))
       else:
         msg = "Unknown command: " + token
         raise ValueError(msg)
