@@ -94,15 +94,14 @@ class Calculator():
         b = self.data.pop()
         # get the operator
         op_func = self.binaryOps[token]
-        # "=" does not require a and b to be integers
-        if(token != "="):
+        if(token != "="):  # "=" does not require a and b to be integers
           #check that they are integers
           util.expectInt(a)
           util.expectInt(b)
-          # apply the operator...
-          c = int(op_func(a, b)) # some operators (i.e., "<" and ">" return "True" or "False"; so parse it to int
-          # and push the result onto the data stack
-          self.data.push(c)
+        # apply the operator...
+        c = int(op_func(a, b)) # some operators (i.e., "<" and ">" return "True" or "False"; so parse it to int
+        # and push the result onto the data stack
+        self.data.push(c)
       elif token == "~":
         # negation
         val = int(self.data.pop())
