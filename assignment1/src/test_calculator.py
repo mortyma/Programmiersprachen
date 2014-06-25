@@ -18,12 +18,18 @@ class TestCalculator(unittest.TestCase):
     self.calculator.push_code("1 2+3c45d~<[678+]a")
     self.assertEqual([1, 2, "+", 3, "c", 45, "d", "~", "<", "[678+]", "a"], self.calculator.code)
     self.assertEqual([], self.calculator.data)
-    
+  
+  # test pushing blocks
   def test_push_block_onto_data(self):
     self.calculator.push_code("[2*]")
     self.calculator.execute()
     self.assertEqual([], self.calculator.code)
     self.assertEqual(["[2*]"], self.calculator.data)
+    
+  def test_push_two_blocks(self):
+    self.calculator.push_code("[2*][3+]")
+    self.calculator.execute()
+    self.assertEqual(["[3+]", "[2*]"], self.calculator.data)
     
   # test the application operator
   def test_apply_on_block(self):
