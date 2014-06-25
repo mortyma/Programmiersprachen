@@ -179,7 +179,9 @@ class Calculator():
   # If "=" is applied to two equal blocks or two equal integers, 
   # then the result equals 1, otherwise 0
   def eq(self, a, b):
-    return a == b #TODO: does this work for blocks?
+    if not (util.is_number(a) and util.is_number(b)) and not(self.is_block(a) and self.is_block(b)):
+      raise ValueError("Operator '=' can only be applied to two blocks or two integers!")
+    return a == b 
       
   def is_block(self, b):
     '''return true if b is a block'''
