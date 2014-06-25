@@ -41,7 +41,7 @@ class Calculator():
     # commands
     self.commands = ["a", "c", "d", "r", "w", "b", "g", "x"]
     # union of commands, unaryOps and binaryOps
-    self.validChars = self.unaryOps + self.binaryOps.keys() + self.commands
+    self.operations = self.unaryOps + self.binaryOps.keys() + self.commands
     
   # push code onto the calculator's code stack
   # Left-most command will be at the top of the code stack
@@ -67,7 +67,7 @@ class Calculator():
         block = s[i:end + 1]
         i = end
         l.append(block)
-      elif s[i] in self.validChars:
+      elif s[i] in self.operations:
         l.append(s[i])
       elif s[i].isspace():
         pass
@@ -128,12 +128,12 @@ class Calculator():
         # only digits, commands and operators may be read 
         if util.is_number(item):
           self.data.push(int(item))
-        elif item in self.validChars:
+        elif item in self.operations:
           self.data.push(item)
       elif token == "w":
         # make sure that the top element of the data stack is an integer or a command
         val = self.data.pop()
-        if not util.is_number(val) and val not in self.validChars:
+        if not util.is_number(val) and val not in self.operations:
           raise ValueError("Cannot write to output stream" + val)
         for byte in to_ascii(val):
           self.oS.write(byte)
