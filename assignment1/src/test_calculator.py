@@ -91,17 +91,16 @@ class TestCalculator(unittest.TestCase):
     self.assertEqual([], self.calculator.code)
     self.assertEqual([49, 50], self.calculator.oS)
     
-  #def test_write_invalidArg(self):
+  def test_write_invalidArg(self):
     # TODO: for this we need to be able to push blocks onto the stacks
-    #self.calculator.push_code("[ 1 + ] w")
+    self.calculator.push_code("[1+]w")
+    self.assertRaises(ValueError, self.calculator.execute)
   
   # test read command
   def test_read(self):
     self.calculator.push_code("r r")
     self.calculator.execute()
     self.assertEqual([2, 1], self.calculator.data)
-    
- 
     
   # print the calculator's state before and after execution
   def debug_exec(self):
