@@ -55,7 +55,14 @@ class Calculator():
           n = n * 10 + int(s[i])
         l.append(n)
       elif s[i] == "[":
-        end = s.index("]", i)
+        end = i
+        cnt = 1
+        while cnt != 0 or s[end] != "]":
+         end += 1   
+         if s[end] == "[":
+           cnt += 1
+         elif s[end] == "]":
+           cnt -= 1                
         block = s[i:end + 1]
         i = end
         l.append(block)

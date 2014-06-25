@@ -31,6 +31,11 @@ class TestCalculator(unittest.TestCase):
     self.calculator.execute()
     self.assertEqual(["[3+]", "[2*]"], self.calculator.data)
     
+  def test_push_block_in_block(self):
+    self.calculator.push_code("[2*[3+]]")
+    self.calculator.execute()
+    self.assertEqual(["[2*[3+]]"], self.calculator.data)
+    
   # test the application operator
   def test_apply_on_block(self):
     self.calculator.push_code("3[2*]a")
