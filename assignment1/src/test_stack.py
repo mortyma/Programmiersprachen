@@ -3,7 +3,7 @@ import unittest
 import stack
 
 
-class TestStack(unittest.TestCase):
+class StackTest(unittest.TestCase):
   
     def setUp(self):
         self.stack = stack.Stack()

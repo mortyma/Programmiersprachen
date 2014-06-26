@@ -6,7 +6,7 @@ import test_base
 import calculator
 import stream
 
-class TestCalculator(test_base.TestBase, unittest.TestCase):
+class CalculatorTest(test_base.TestBase, unittest.TestCase):
         
     # test pushing some code (including numbers, commands, operators and blocks
     def test_push_block(self):

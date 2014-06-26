@@ -4,7 +4,7 @@ import unittest
 import test_base
 
 
-class TestExamples(test_base.TestBase, unittest.TestCase):
+class ExamplesTest(test_base.TestBase, unittest.TestCase):
   
     def test_conditional_exec(self):
         code = "[9~][9][3c4d1+da]a"
