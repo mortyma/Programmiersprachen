@@ -101,7 +101,7 @@ class Calculator():
             if util.is_number(token):
                 # integers are simply pushed onto the data stack
                 self.data.push(int(token))
-            elif token in self.binaryOps.keys():
+            elif token in self.binaryOps:
                 # binary operators: {+,-,*,/,%,&,|,=,<,>}
                 # pop to items from data stack 
                 a = self.data.pop()
@@ -122,7 +122,7 @@ class Calculator():
                 self.data.push(-val)  
             elif token == "x":
                 return #quick fix: exit gracefully
-            elif token in self.commands.keys():
+            elif token in self.commands:
                 func = self.commands[token]
                 func()
             elif token.startswith("[") and token.endswith("]"):
