@@ -24,6 +24,16 @@ class CalculatorTest(test_base.TestBase, unittest.TestCase):
     def test_push_block_in_block(self):
         self.exec_expect_data("[2*[3+]]", ["[2*[3+]]"])
         
+    # test logic and arithmetic operators
+    def test_less(self):
+        self.exec_expect_data("2 4>", [1])
+    
+    def test_greater(self):
+        self.exec_expect_data("2 4<", [0])
+    
+    def test_plus(self):
+        self.exec_expect_data("2 4+", [6])
+    
     # test the application operator
     def test_apply_on_block(self):
         self.exec_expect_data("1[3-]a", [2])
@@ -85,6 +95,15 @@ class CalculatorTest(test_base.TestBase, unittest.TestCase):
         
     def test_group_two_ints(self):
         self.exec_expect_data("1 2g", ["[1 2]"])
+
+    def test_group_int_and_block2(self):
+        self.exec_expect_data("53[119]g", ["[53 119]"])
+        
+    def test_group_block_and_int2(self):
+        self.exec_expect_data("[53]119g", ["[53 119]"])
+        
+    def test_group_many_blocks(self):
+        self.exec_expect_data("[][2][53 119]g", ["[2 53 119]","[]"])
         
     def test_group_example1(self):
         #"1 3ga-" has to give the same as "1 3-", i.e., 1 (TODO: recheck this)

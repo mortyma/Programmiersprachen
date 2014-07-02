@@ -97,6 +97,9 @@ class Calculator():
     def execute(self):
         '''execute the "program" on the code stack'''
         while (not self.code.isEmpty()):
+#TODO: remove debug
+	    print "]] stack: {0} ^ {1} ".format(self.data.toString(True), self.code.toString())
+	    
             token = self.code.pop()
             if util.is_number(token):
                 # integers are simply pushed onto the data stack
@@ -106,6 +109,8 @@ class Calculator():
                 # pop to items from data stack 
                 a = self.data.pop()
                 b = self.data.pop()
+#TODO: remove debug
+#		print "bin op={0}, a={1}, b={2}".format(token,a,b)
                 # get the operator
                 op_func = self.binaryOps[token]
                 if(token != "="):  # "=" does not require a and b to be integers
@@ -153,35 +158,44 @@ class Calculator():
     
     def read(self):
         # read from input stream 
-        item = chr(self.iS.read())
+#        item = chr(self.iS.read())
+        item = self.iS.read()
         # only digits, commands and operators may be read 
         if util.is_number(item):
-            self.data.push(int(item))
-        elif item in self.operations:
+#            self.data.push(int(item))
             self.data.push(item)
+        elif item in self.operations:
+            raise ValueError("Input {0} is not a valid char code")
+ #           self.data.push(item)
     
     def write(self):
         '''operation "w"'''
         # make sure that the top element of the data stack is an integer or a command
         val = self.data.pop()
+        print ">> {0}".format(val)
         if not util.is_number(val) and val not in self.operations:
             raise ValueError("Cannot write to output stream" + val)
-        for byte in to_ascii(val):
-            self.oS.write(byte)
+#        for byte in to_ascii(val):
+#            self.oS.write(byte)
+	self.oS.write(val)
     
     def applyBlock(self):  #note that "apply" is a reserved word
         ''' operation "a" '''
         if self.is_block(self.data.peek()):
             p = self.data.pop()
+#TODO: remove debug
+#	    print "apply {0} stack: {1} ^ {2} ".format(p, self.data, self.code)
             self.push_code(p[1:len(p) - 1])
       
     def build(self):
         ''' operation "b" '''
         arg = self.data.pop()
-        if self.is_block(arg) or arg in self.operations:
+        if self.is_block(arg):
             self.data.push("[" + arg + "]")
+        elif chr(arg) in self.operations:
+            self.data.push("[" + chr(arg) + "]")
         else:
-            raise ValueError("Invalid argument for operation 'build block':" + str(arg))
+            raise ValueError("Invalid argument for operation 'build block': {0}/{1}".format(arg, chr(arg)))
       
     def group(self):
         ''' operation "g" '''
@@ -191,7 +205,7 @@ class Calculator():
             # two blocks
             block =  arg2[0:len(arg2) - 1]
             arg1 = arg1[1:len(arg1)]
-            if util.is_number(arg2[len(arg1) - 1]) and util.is_number(arg1[0]):
+            if util.is_number(arg2[-2]) and util.is_number(arg1[0]):
                     block += " "
             block += arg1
         elif util.is_number(arg1) and util.is_number(arg2):
@@ -207,11 +221,13 @@ class Calculator():
         elif self.is_block(arg2) and util.is_number(arg1):
             # block (arg2) and integer (arg1)
             block =  arg2[0:len(arg2) - 1]
-            if util.is_number(arg2[len(arg2) - 1]) and util.is_number(arg1[0]):
+            if util.is_number(arg2[-2]):
                     block += " "
             block += str(arg1) + "]"
         else:
             raise ValueError("todo")
+#TODO: remove debug
+#        print "group block: '{0}'".format(block)
         self.data.push(block)
         
     def div(self, a, b):
