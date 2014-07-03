@@ -22,7 +22,7 @@ class Stack(list):
     def pop(self):
         return super(Stack, self).pop(0)
     
-    def toString(self, reverse = False):
+    def toString(self, reverse = False, count = 0):
         '''Contents of the stack as a string. 
         
         Top-most element is first element in the string if reverse is False 
@@ -32,5 +32,8 @@ class Stack(list):
             l = reversed(self)
         else:
             l = self
+
+	if(count>0):
+	        return ' '.join('[..]' if len(str(p))>count else str(p) for p in l)	
         return ' '.join(str(p) for p in l)
  

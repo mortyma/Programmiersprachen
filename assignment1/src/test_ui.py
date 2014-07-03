@@ -14,52 +14,60 @@ class TestUi(unittest.TestCase):
         self.oS = stream.Stream()
         self.calculator = calculator.Calculator(self.iS, self.oS)
         self.ui = ui.Ui(self.calculator)
-
-#    def test_single_digit(self):
-#        '''input stream holds one digit and a write, expect the digit to be on the stack in the end.
+        
+#    def test_single_digit_W(self):
+#        '''input stream holds one digit and a number write, expect the digit to be on the stack in the end.
 #        the digit is represented by an ascii code'''
-#        expected = [ord("5")]
-#        self.calculator.iS.write(ord("5"))
-#        self.calculator.iS.write(ord("w"))
-#        self.calculator.iS.write(10)
-#        self.ui.runSilent()
-#        self.assertEqual(expected, self.calculator.oS)
-        
-#    def test_single_digit(self):
-#        '''input stream holds one digit and a write, expect the digit to be on the stack in the end.
+#        self.exec_ui_conv_os("5W", "5") #5W = [53, 87, 10]
+#        
+#    def test_single_digit_w(self):
+#        '''input stream holds one digit and a char write, expect the digit to be on the stack in the end.
 #        the digit is represented by an ascii code'''
-#        self.exec_ui("5w", "5")
-        
-    def test_multiple_digit(self):
-        '''input stream holds one digit and a write, expect the digit to be on the stack in the end.
-        the digit is represented by an ascii code'''
-        self.exec_ui("123w", "123")
-        
+#        self.exec_ui_plain_os("5w", [5]) #5w = [53, 119, 10]
+#        
+#    def test_composed_char(self):
+#        '''input stream holds a number and a char write, expect to return the number as ascii code = z'''
+#        self.exec_ui_conv_os("122w", "z")
+#        
 #    def test_no_output(self):
-#        '''input stream holds one digit and a write, expect the digit to be on the stack in the end.
-#        the digit is represented by an ascii code'''
-#        self.exec_ui("6 7+", "")
-        
-#    def test_no_simple_addition(self):
-#        '''input stream holds one digit and a write, expect the digit to be on the stack in the end.
-#        the digit is represented by an ascii code'''
-#        self.exec_ui("6 7+w", "13")
-        
-    def exec_ui(self, actualInput, expectedOutput):
+#        '''s simple addition, but no write operation'''
+#        self.exec_ui_conv_os("6 7+", "")
+#        
+#    def test_simple_addition_W(self):
+#        '''simple addition followed by a number write, expected the number 13, [49,51] as ascii'''
+#        self.exec_ui_conv_os("6 7+W", "13") # = [54,32,55,43,87,10]
+#        
+#    def test_simple_addition_w(self):
+#        '''simple addition followed by a char write, expected the ascii code 13'''
+#        self.exec_ui_plain_os("6 7+w", [13])
+
+#    def test_simple_block(self):
+#        '''simple addition followed by a char write, expected the ascii code 13'''
+#        self.exec_ui_plain_os("[6w]a", [6]) # = [91,54,119,93,97]
+#
+#    def test_addition_block(self):
+#        '''simple addition followed by a char write, expected the ascii code 13'''
+#        self.exec_ui_plain_os("[6 7+w]a", [13])
+
+    def test_simple_addition_w(self):
+        '''some calculation, expect the return string "hello"'''
+        self.exec_ui_conv_os("26 4*w 101w [100 8+]1ca2c3da 111w", "hello") # = 050 054 032 052 042 119 032 049 048 049 119 032 091 049 048 048 032 056 043 093 049 099 097 050 099 051 100 097 032 049 049 049 119
+
+#104w101w108w108w111w
+    def exec_ui_conv_os(self, actualInput, expectedOutput):
+        '''input stream holds one digit and a write, expect the digit to be on the stack in the end.
+        the digit is represented by an ascii code. output is converted to char values'''
+        expected = map(lambda x: ord(x), expectedOutput)
+        self.exec_ui_plain_os(actualInput, expected)
+
+    def exec_ui_plain_os(self, actualInput, expectedOutput):
         '''input stream holds one digit and a write, expect the digit to be on the stack in the end.
         the digit is represented by an ascii code'''
-#TODO: remove debug        
-        print "input stream raw: {0}".format(actualInput)
         for a in actualInput:
             self.calculator.iS.write(ord(a))
         self.calculator.iS.write(10)
-        expected = map(lambda x: ord(x), expectedOutput)
-
-#TODO: remove debug        
-        print "input stream: {0}".format(self.calculator.iS)
-        
         self.ui.runSilent()
-        self.assertEqual(expected, self.calculator.oS)
+        self.assertEqual(expectedOutput, self.calculator.oS)
         
 if __name__ == "__main__":
     unittest.main()

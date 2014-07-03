@@ -34,6 +34,15 @@ class CalculatorTest(test_base.TestBase, unittest.TestCase):
     def test_plus(self):
         self.exec_expect_data("2 4+", [6])
     
+    def test_plus(self):
+        self.exec_expect_data("6 2-", [-4])
+    
+    def test_div(self):
+        self.exec_expect_data("6 13/", [2])
+    
+    def test_div2(self):
+        self.exec_expect_data("6 5/", [0])
+    
     # test the application operator
     def test_apply_on_block(self):
         self.exec_expect_data("1[3-]a", [2])
