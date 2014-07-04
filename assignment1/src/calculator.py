@@ -98,7 +98,7 @@ class Calculator():
         '''execute the "program" on the code stack'''
         while (not self.code.isEmpty()):
 #TODO: remove debug
-	    print "]] stack: {0} ^^^ {1} ".format(self.data.toString(True), self.code.toString())
+#	    print "]] stack: {0} ^^^ {1} ".format(self.data.toString(True), self.code.toString())
 #	    print "----]] stack: {0} ^^^ {1} ".format(self.data.toString(True,30), self.code.toString(False,10))
 	    
             token = self.code.pop()

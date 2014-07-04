@@ -20,7 +20,9 @@ class Ui():
         enter = "101w110w116w101w114w032w099w111w109w109w097w110w100w058w032w"
 
     def checkInputString(self):
-
+        #data stack layout: [*..saved blocks..][linput loop][code block][buffer 1][buffer2][*working space]^
+        #working space can consist of more than one object, but before a new input its usually empty
+        #saved blocks are the last ones, usually 6-n
         condition ="{0}{1}{2}[3c4d1+da]a" #put 0/1 as cond, a block as true and one as false
 
 
@@ -51,10 +53,10 @@ class Ui():
         checkNumLt = "[" + condition.format("1c58>", convertOpDig, convertAsciiToDig + numberSufix) + "]"; #is 58>num
         checkNumGt = "[" + condition.format("1c47<", convertOpDig, checkNumLt) + "]"; #is 57<num
 
-        #check if block
-        checkStartBlock = "[" + condition.format("1c91=", checkNumGt, "[1d[[]]" + noNumberSufix) + "]" #an empty block
-#        checkEndBlock = "[" + condition.format("1c93=", checkStartBlock, "[1d[bg]" + noNumberSufix) + "]" #first block the block, then join it the previous block
-        checkEndBlock = "[" + condition.format("1c93=", checkStartBlock, "[1d1d1db[0][]]") + "]" #first block the block, then join it the previous block
+        #check if block starts: remove [ and buffers, move actual code block from position 1 down to position 2 (means move 2 to top), add empty code block and buffers
+        checkStartBlock = "[" + condition.format("1c91=", checkNumGt, "[1d1d1d 2c3d [][0][]]") + "]"
+        #check if block ended: remove ] and buffers, move the first saved block back to top and append the actual code block to it (means move 3, 2 to top , block and group)
+        checkEndBlock = "[" + condition.format("1c93=", checkStartBlock, "[1d1d1d 3c4d 2c3d bg [0][]]") + "]"
 
 	#check spaces
         checkEndBlock = condition.format("1c32=", checkEndBlock, "[[1d[]]" + noNumberSufix) #if it's a space char, just put an empty block instead, so it can merge..
