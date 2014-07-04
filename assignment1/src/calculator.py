@@ -98,9 +98,9 @@ class Calculator():
         '''execute the "program" on the code stack'''
         while (not self.code.isEmpty()):
 #TODO: remove debug
-#	    print "]] stack: {0} ^^^ {1} ".format(self.data.toString(True), self.code.toString())
-#	    print "----]] stack: {0} ^^^ {1} ".format(self.data.toString(True,30), self.code.toString(False,10))
-	    
+#            print "----]] stack: {0} ^^^ {1} ".format(self.data.toString(True), self.code.toString())
+            print "----]] stack: {0} ^^^ {1} ".format(self.data.toString(True,30), self.code.toString(False,10))
+
             token = self.code.pop()
             if util.is_number(token):
                 # integers are simply pushed onto the data stack
@@ -173,7 +173,7 @@ class Calculator():
         '''operation "w"'''
         # make sure that the top element of the data stack is an integer or a command
         val = self.data.pop()
-        print ">> {0}".format(val)
+#        print ">> {0}".format(val)
         if not util.is_number(val) and val not in self.operations:
             raise ValueError("Cannot write to output stream" + val)
 #        for byte in to_ascii(val):

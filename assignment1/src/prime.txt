@@ -1,0 +1,22 @@
+primzahlentest:
+===============
+
+n: schleifenzahl
+c: ob prim 1=ja
+k: zu testende zahl
+
+stack: [i][c][n][work space]^
+
+schleifenbedingung:
+while check=0 & i*i<n //initial: ws leer, check auf 2, i auf 3
+2c 0= 4c1c*3c>
+
+test für i
+c=(n%i == 0 | c)
+3c2c%0=3c|3d 3c4d 1+ 2c3d 3c4d
+
+text enter number:
+101w110w116w101w114w032w110w117w109w098w101w114w058w
+
+code:
+[2c 0= 4c1c*3c>[2cW][3c2c%0=3c|3d 3c4d 1+ 2c3d 3c4d][3c4d1+da]a] 2 0 101w110w116w101w114w032w110w117w109w098w101w114w058w r 4ca
