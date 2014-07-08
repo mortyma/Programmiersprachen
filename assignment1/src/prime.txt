@@ -1,22 +1,33 @@
-primzahlentest:
-===============
+einfacher primzahlentest:
+=========================
 
 n: schleifenzahl
-c: ob prim 1=ja
+c: ob NICHT prim (0=prim)
 k: zu testende zahl
 
 stack: [i][c][n][work space]^
 
 schleifenbedingung:
 while check=0 & i*i<n //initial: ws leer, check auf 2, i auf 3
-2c 0= 4c1c*3c>
+2c 0= 4c1c*3c>&
 
 test für i
 c=(n%i == 0 | c)
 3c2c%0=3c|3d 3c4d 1+ 2c3d 3c4d
 
 text enter number:
-101w110w116w101w114w032w110w117w109w098w101w114w058w
+101w110w116w101w114w32w110w117w109w98w101w114w58w
 
-code:
-[2c 0= 4c1c*3c>[2cW][3c2c%0=3c|3d 3c4d 1+ 2c3d 3c4d][3c4d1+da]a] 2 0 101w110w116w101w114w032w110w117w109w098w101w114w058w r 4ca
+test für ende:
+0=prim
+1=nicht prim
+texte prim:32w105w115w32w112w114w105w109w101w33w( is prime!)
+text nicht prim:32w105w115w32w110w111w116w32w112w114w105w109w101w33w( is not prime!)
+code: [32w105w115w32w112w114w105w109w101w33w][32w105w115w32w110w111w116w32w112w114w105w109w101w33w]
+
+-------------------------------------
+finale code:
+[2c 0= 4c1c*3c>&[1cW[32w105w115w32w112w114w105w109w101w33w][32w105w115w32w110w111w116w32w112w114w105w109w101w33w]4c1+da][3c2c%0=3c|3d 3c4d 1+ 2c3d 3c4d 4ca][3c4d1+da]a] 2 0 101w110w116w101w114w32w110w117w109w98w101w114w58w R 4ca 1d1d1d1d
+
+
+

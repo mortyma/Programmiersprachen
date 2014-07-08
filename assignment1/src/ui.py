@@ -9,7 +9,8 @@ class Ui():
 
     def __init__(self, calc = calculator.Calculator(stdinstream.StdinStream(), stdoutstream.StdoutStream())):
         self.calc = calc
-        self.hello = "104w101w108w108w111w032w119w111w114w108w100w033w010w010w"
+#        self.hello = "104w101w108w108w111w032w119w111w114w108w100w033w010w010w"
+        self.hello = "72w101w114w101w39w115w32w74w111w104w110w110w121w33w32w59w41w10w10w"
         self.enter = "10w101w110w116w101w114w032w099w111w109w109w097w110w100w058w032w"
         self.bye = "10w98w121w101w98w121w101w033w10w"
 
@@ -71,21 +72,25 @@ class Ui():
         printNumDigitNestedAddW = "2c 48+w a -~ "
         
         #W:  another loop that gathers the first digit of a number and the value of this digit (ie 356->3 and 100): divide by 10, add a *10 buffer, copy the original number (and continue dividing..)
-        printNumDigitNested = self.buildWhile("2c10<", "10 3c4d/2c3d[10*] g",  3) + printNumDigitNestedAddW
+        printNumDigitNested = self.buildWhile("2c9<", "10 3c4d/2c3d[10*] g", 3) + printNumDigitNestedAddW
         
         #W: copy the number put a empty block after the copy to store the *10*10 (see loops workspace structure).. 
         #start a nested loop to get  the digit: when finished, add 48 to the last digit and push to outputstream with w
-        printNumDigit = self.buildWhile("1c10<",  "1c[]"+ printNumDigitNested) + "48+w"
+        printNumDigit = self.buildWhile("1c9<", "1c[]"+ printNumDigitNested) + "48+w"
 
         #W: when W, remove W and switch buffer with numcontinue with splitting in a loop, else block the ascii code to convert it to a symbol and replace the buffer
-        printNum = self.buildIf("1c87=",  "1d1d [[" + printNumDigit + "]a] g [0]", "2d bg [0]")
+        printNum = self.buildIf("1c87=", "1d1d [[" + printNumDigit + "]a] g [0]", "2d bg [0]")
 
         #data stack layout: [*5+: ..saved blocks..][*4: input loop][3: code block][2: buffer 1][1: buffer2][*0: working space]^
         #w: remove puffer, create block, join blocks and set new buffer
-        printAscii = self.buildIf("1c119=",  "2d bg [0]",  printNum)
+        printAscii = self.buildIf("1c119=", "2d bg [0]", printNum)
+
+        #R: read a number (only digits, the rest till \n gets dismissed.. no better approach atm)
+        #loop: while gt 47 ant lt 58,
+        readNum = self.buildIf("1c82=", "1d1d [[][0]" + self.buildWhile("r1c 47< 2c 58> &",  "48-~[+]ggg [10*]", 3, "1d") + "1d a] g [0]", printAscii) #TODO: write function to remove rest of the line!!
 
         #x: remove workingspace and buffer insert output string and x in a block and join the block with the code
-        exit = self.buildIf("1c120=", "1d1d [{0}x]g [0]".format(bye),  printAscii)
+        exit = self.buildIf("1c120=", "1d1d [{0}x]g [0]".format(bye), readNum)
 
         #if < 58 convert to digit and use buffer: subtract from 48 and negate, finally group with +, with the number buffer and with the code
         digitLt = self.buildIf("1c58>", "48-~[+]ggg [10*]" ,  exit)
@@ -113,11 +118,11 @@ class Ui():
         condition ="{0}[{1}][{2}][3c4d1+da]a" #put 0/1 as cond, a block as false and one as true, the last part is if-logic
         return condition.format(c, f, t)
 
-    def buildWhile(self, c, code,  loopPos = 2):
+    def buildWhile(self, c, code,  loopPos = 2,  post = ""):
         mov = "".join(["{0}c{1}d ".format(loopPos,  loopPos+1) for a in range(1, loopPos)])
         #loop = "[{0}[2d][{1}3ca][3c4d1+da]a]2c3d 2ca" # move loop down to pos 3, if false, delete loop, if true, copy loop and execute
-        loop = "[{0}[{2}d][{1}{2}ca][3c4d1+da]a]{4} {2}ca" # move loop down to pos 3, if false, delete loop, if true, copy loop and execute
-        return loop.format(c, code,  loopPos,  loopPos+1, mov)
+        loop = "[{0}[{5}{2}d][{1}{2}ca][3c4d1+da]a]{4} {2}ca" # move loop down to pos 3, if false, delete loop, if true, copy loop and execute
+        return loop.format(c, code,  loopPos,  loopPos+1, mov,  post)
 
     def buildResetWhileNot(self, c, code,  reset): #little strange loop, does not remove the loop where it was places in the beginning (im to lazy now to fix the other code...)
         loop = "[{0}[{1}3ca][{2} 3ca][3c4d1+da]a]3c4d 3c4d 3ca" # move loop down to pos 3, if false, delete loop, if true, copy loop and execute
