@@ -144,7 +144,7 @@ class Procedure
   end
 end
 
-class ActivationRecord
+class Activation
 
 end
 
@@ -161,7 +161,11 @@ class GCAst < Parslet::Transform
 
   rule(:result => simple(:result), :stdout => simple(:stdout), :cmd => simple(:cmd), :stdin=>simple(:stdin)) {
     Command.new([result,stdout],[cmd,stdin]){|cmd,stdin|
-    ["1","out"]
+      require 'Open3'
+      Open3.popen3(cmd) {|i, o, e, t|  
+        i.write(stdin)
+        [t.value.to_i.to_s, o.read]
+      }
     }
   }
   rule(:fst => simple(:fst), :snd => simple(:snd), :delim => simple(:delim), :str=>simple(:str)) {
