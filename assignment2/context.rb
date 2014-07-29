@@ -15,15 +15,20 @@ class Context
   end
 
   # set multiple values atomically
+  # @param keys [Array<Variable>]
+  # @param values [Array<String>]
   def set_multiple(keys, values)
+    raise "Invalid size" unless keys.size == values.size
     # pp keys,values
-    merge Hash[keys.zip(values)]
-    # pp @vars
+    keys.zip(values).each do |var, val|
+      set(var,val) unless var.nil? or val.nil?
+    end
   end
 
-  # expand strings and variables, ignore nils
+  # expand strings and variables
+  # @param x [Variable, Str, String]
   def get(x)
-    if x.is_a?(String) or x.nil?
+    if x.is_a?(String)
       x
     elsif x.is_a?(Variable)
       raise "Variable not bound" unless @vars.key?(x.name)
@@ -35,14 +40,16 @@ class Context
     end
   end
 
-  #this is only a convinience method, consistency is already ensured by single-assignment semantics
-  def get_multiple(params)
-    params.map{ |x| x.nil? ? nil : get(x) }
+  # this is only a convinience method, consistency is already ensured by single-assignment semantics
+  # we ignore nils
+  # @param list [Array<Variable, Str, String, nil>]
+  def get_multiple(list)
+    list.map{ |x| x.nil? ? nil : get(x) }
   end
 
-  # literals and nils are always bound
+  # @param x [Variable, Str, String]
   def bound?(x)
-    if x.is_a?(String) or x.nil?
+    if x.is_a?(String)
       true
     elsif x.is_a?(Variable)
       @vars.key?(x.name)
@@ -54,15 +61,10 @@ class Context
   end
 
   #this is only a convinience method, consistency is ensured by single-assignment semantics
+  # we ignore nils
+  # @param list [Array<Variable, Str, String, nil>]
   def all_bound?(list)
-    list.all?{|x| bound?(x)}
+    list.all?{|x| x.nil? or bound?(x)}
   end
 
-  def merge(hash)
-    hash.each do |var, val|
-      set(var,val) unless var.nil? or val.nil?
-    end
-  end
-
-  private :merge
 end
