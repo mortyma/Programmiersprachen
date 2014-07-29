@@ -29,7 +29,7 @@ class GCParser < Parslet::Parser
     name.as(:isbound)
 
   }
-  rule(:string) {str('"') >> (variable|match['^"$'].repeat(1).as(:content)).repeat.as(:string) >> str('"') >> space?}
+  rule(:string) {str('"') >> (variable|(str('\"')|match['^"$']).repeat(1).as(:content)).repeat.as(:string) >> str('"') >> space?}
   rule(:variable) {str('$') >> identifier.as(:name) >> str('$')}
   rule(:name) { identifier.as(:name) >> space? }
   root :program

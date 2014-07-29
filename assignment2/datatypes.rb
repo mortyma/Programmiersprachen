@@ -12,5 +12,14 @@ class Variable
   end
 end
 
-class Str < Struct.new(:contents)
+class Str
+  attr_reader :contents
+	def initialize(cts=[])
+		@contents=cts.map{|x| Str.unescape(x)}
+	end
+
+  def self.unescape(x)
+    return x unless x.is_a?(String)
+    x.gsub('\"','"')
+  end
 end

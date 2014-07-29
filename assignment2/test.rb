@@ -1,7 +1,7 @@
 require './parser'
 require 'pp'
 
-program = parse(<<END
+program = parse(<<-'END'
          maxnum a b c -  "$max$ $two$ $x$" {
            x = bla "$a$" "$b$" "1000";
            ab = exec "test $a$ -le $b$";
@@ -15,7 +15,7 @@ program = parse(<<END
            one two = split "b" "1b2";
            finally : max = "error";
          } 
-         bla a b c -  "$max$" {
+         bla a b c -  "$max$\" \n bla" {
            ab = exec "test $a$ -le $b$";
            bc = exec "test $b$ -le $c$";
            ab == "0" : bc == "0" : max = "$c$";
@@ -26,7 +26,7 @@ program = parse(<<END
            ac == "1" : max = "$a$";
            finally : max = "error";
          }
-END
+  END
 )
 
 # ab  : max = maxnum;
