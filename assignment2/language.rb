@@ -64,7 +64,7 @@ class Procedure
   # create a Task corresponding to the procedure call
   # @param *args [*String] arguments to the procedure
   # @param &finish_block [Block] block to yield results to
-  # @return [Task] that will call 
+  # @return [Task] that enqueues all ready commands, and itself if there is any work left 
   def new_task(*actual_params, &finish_block)
     ctx = Context.new(@params,actual_params)
     this_task = Task.new do |task_queue|
@@ -92,13 +92,17 @@ class Procedure
 end
 
 class GCommand < Struct.new(:guards, :command)
+  # check that all guards are true and command ready
   def ready?(ctx)
     guards.all?{|g| g.true?(ctx)} and command.ready?(ctx)
   end
 
+  # @return new [Task] to run command if it is (still) ready
   def new_task(ctx)
     Task.new do |task_queue|
-      raise "Guard failed" unless guards.all?{|g| g.true?(ctx)}
+      #  by single-assignment true guards cannot become false
+      raise "Guard error (single-assignment violation?)" unless guards.all?{|g| g.true?(ctx)}
+      # don't run if task no longer ready (because )
       if command.ready?(ctx)
         command.run(task_queue, ctx)
       end
@@ -107,40 +111,50 @@ class GCommand < Struct.new(:guards, :command)
 end
 
 class Guard
+  # @param rvs [Array] formal parameters
+  # @param condition [block] closure to be called with actual parameters
   def initialize(rvs, &condition)
     @condition = condition || Proc.new {true}
     @rvs = rvs
   end
 
+  # check that all parameters are bound and condition evaluates to true
   def true?(ctx)
     ctx.all_bound?(@rvs) and @condition.call(*ctx.get_multiple(@rvs))
   end
 end
- 
+
 class Command
   def initialize(lvs=[],rvs=[])
     @lvs = lvs
     @rvs = rvs
   end
 
+  #  check that all parameters are bound and all results are unbound
   def ready?(ctx)
     ctx.all_bound?(@rvs) and @lvs.all?{|x| x.nil? or not ctx.bound?(x)}
   end
 
-  def run(task_queue, ctx)
+  def body
     raise "abstract method not implemented"
+  end
+
+  # run body with @rvs and set @lvs to return values
+  def run(task_queue, ctx)
+    actual_params = ctx.get_multiple(@rvs)
+    ret = body(*actual_params)
+    ctx.set_multiple(@lvs, ret)
   end
 end
 
 class BlockCommand < Command
-  def initialize(lvs=[],rvs=[], &block)
-    super(lvs,rvs)
+  def initialize(lvs=[], rvs=[], &block)
+    super(lvs, rvs)
     @block = block
   end
 
-  def run(task_queue, ctx)
-    ret = @block.call(*ctx.get_multiple(@rvs))
-    ctx.set_multiple(@lvs,ret)
+  def body(*params)
+    @block.call(*params)
   end
 end
 
