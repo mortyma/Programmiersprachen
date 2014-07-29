@@ -1,6 +1,6 @@
 require 'rubygems'
 require 'parslet'
-require './language'
+require_relative 'language'
 
 class GCParser < Parslet::Parser
   rule(:space?)     { match('\s').repeat(1) }

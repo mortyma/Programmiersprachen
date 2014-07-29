@@ -1,4 +1,4 @@
-require './datatypes'
+require_relative 'datatypes'
 
 # this class corresponds to the activation record of procedures
 # it it also the only place where synchronization would be necessary (if it weren't for the GIL)

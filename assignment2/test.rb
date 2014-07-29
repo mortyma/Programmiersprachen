@@ -1,4 +1,4 @@
-require './parser'
+require_relative 'parser'
 require 'pp'
 
 program = parse(<<-'END'

@@ -1,6 +1,5 @@
-require './task'
-require './context'
-require './datatypes'
+require_relative 'task'
+require_relative 'context'
 
 class Program
   attr_reader :procedures
