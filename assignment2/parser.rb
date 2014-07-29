@@ -37,13 +37,13 @@ end
 
 
 class GCAst < Parslet::Transform
-  rule(:name => simple(:x)) { Variable.new(x) }
+  rule(:name => simple(:x)) { Identifier.new(x) }
   rule(:content => simple(:x)) { x.to_str }
   rule(:string => sequence(:x)) { s=Str.new(x) }
 
   rule(:l => simple(:l), :eq => simple(:eq), :r =>simple(:r) ) { Guard.new([l,r]){|l, r| l==r} }
   rule(:l => simple(:l), :neq => simple(:eq), :r =>simple(:r) ) { Guard.new([l,r]){|l, r| l!=r} }
-  rule(:finally => simple(:x)) { Guard.new([Variable.finally]) }
+  rule(:finally => simple(:x)) { Guard.new([Identifier.finally]) }
   rule(:isbound => simple(:x)) { Guard.new([x]) }
 
 # exec

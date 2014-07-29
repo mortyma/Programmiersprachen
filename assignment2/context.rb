@@ -15,7 +15,7 @@ class Context
   end
 
   # set multiple values atomically
-  # @param keys [Array<Variable>]
+  # @param keys [Array<Identifier>]
   # @param values [Array<String>]
   def set_multiple(keys, values)
     raise "Invalid size" unless keys.size == values.size
@@ -25,12 +25,12 @@ class Context
     end
   end
 
-  # expand strings and variables
-  # @param x [Variable, Str, String]
+  # expand strings and Variables
+  # @param x [Identifier, Str, String]
   def get(x)
     if x.is_a?(String)
       x
-    elsif x.is_a?(Variable)
+    elsif x.is_a?(Identifier)
       raise "Variable not bound" unless @vars.key?(x.name)
       @vars[x.name]
     elsif x.is_a?(Str)
@@ -42,16 +42,16 @@ class Context
 
   # this is only a convinience method, consistency is already ensured by single-assignment semantics
   # we ignore nils
-  # @param list [Array<Variable, Str, String, nil>]
+  # @param list [Array<Identifier, Str, String, nil>]
   def get_multiple(list)
     list.map{ |x| x.nil? ? nil : get(x) }
   end
 
-  # @param x [Variable, Str, String]
+  # @param x [Identifier, Str, String]
   def bound?(x)
     if x.is_a?(String)
       true
-    elsif x.is_a?(Variable)
+    elsif x.is_a?(Identifier)
       @vars.key?(x.name)
     elsif x.is_a?(Str)
       all_bound?(x.contents)
@@ -62,7 +62,8 @@ class Context
 
   #this is only a convinience method, consistency is ensured by single-assignment semantics
   # we ignore nils
-  # @param list [Array<Variable, Str, String, nil>]
+  # @param list [Array<Identifier, Str, String, nil>]
+
   def all_bound?(list)
     list.all?{|x| x.nil? or bound?(x)}
   end

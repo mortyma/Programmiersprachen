@@ -75,8 +75,8 @@ class Procedure
 
         ready = ready_commands(ctx)
         if ready.empty?
-          raise "Procedure stuck" if ctx.bound?(Variable.finally)
-          ctx.set(Variable.finally,'')
+          raise "Procedure stuck" if ctx.bound?(Identifier.finally)
+          ctx.set(Identifier.finally,'')
           ready = ready_commands(ctx)
         end
 

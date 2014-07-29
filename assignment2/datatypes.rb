@@ -1,6 +1,6 @@
-class Variable
+class Identifier
   def self.finally
-    Variable.new('finally')
+    Identifier.new('finally')
   end
 
   def initialize(name)
@@ -8,7 +8,7 @@ class Variable
   end
 
   def name
-  	@name.to_str
+  	@name.to_str # remove parser tag
   end
 end
 
