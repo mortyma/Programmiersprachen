@@ -15,7 +15,7 @@ class Program
   # Create a TaskQueue and enqueue specified procedure call
   # @return [TaskQueue]
   def queue_for_call(procname, *args, &block)
-    task = procedures[procname].new_task(*args, &block)
+    task = procedures[procname].new_task(nil, *args, &block)
     TaskQueue.new([task])
   end
 
@@ -65,11 +65,14 @@ class Procedure
   # @param *args [*String] arguments to the procedure
   # @param &finish_block [Block] block to yield results to
   # @return [Task] that enqueues all ready commands, and itself if there is any work left 
-  def new_task(*actual_params, &finish_block)
-    ctx = Context.new(@params,actual_params)
+  def new_task(parent_ctx, *actual_params, &finish_block)
+    ctx = Context.new(@params,actual_params,parent_ctx)
     this_task = Task.new do |task_queue|
-      if finished?(ctx)
+      if not ctx.alive?
+        # exit
+      elsif finished?(ctx)
         actual_results = ctx.get_multiple(@results)
+        ctx.kill
         finish_block.call(actual_results)
       else
 
@@ -103,7 +106,7 @@ class GCommand < Struct.new(:guards, :command)
       #  by single-assignment true guards cannot become false
       raise "Guard error (single-assignment violation?)" unless guards.all?{|g| g.true?(ctx)}
       # don't run if task no longer ready (because )
-      if command.ready?(ctx)
+      if command.ready?(ctx) and ctx.alive?
         command.run(task_queue, ctx)
       end
     end
@@ -174,7 +177,7 @@ class ProcCommand < Command
 
   def run(task_queue, ctx)
     actual_params = ctx.get_multiple(@rvs)
-    task = @procedure.new_task(*actual_params) do |actual_results|
+    task = @procedure.new_task(ctx, *actual_params) do |actual_results|
       ctx.set_multiple(@lvs,actual_results)
     end
 

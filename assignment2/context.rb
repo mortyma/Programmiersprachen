@@ -3,8 +3,10 @@ require_relative 'datatypes'
 # this class corresponds to the activation record of procedures
 # it it also the only place where synchronization would be necessary (if it weren't for the GIL)
 class Context
-  def initialize(keys=[], values=[])
+  def initialize(keys=[], values=[], parent=nil)
     @vars={}
+    @parent=parent
+    @alive=true
     set_multiple keys, values
   end
 
@@ -66,6 +68,14 @@ class Context
 
   def all_bound?(list)
     list.all?{|x| x.nil? or bound?(x)}
+  end
+
+  def alive?
+    @alive && (@parent.nil? || @parent.alive? )
+  end
+
+  def kill
+    @alive=false
   end
 
 end
