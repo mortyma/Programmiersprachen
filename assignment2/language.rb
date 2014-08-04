@@ -69,6 +69,7 @@ class Procedure
     ctx = Context.new(@params,actual_params,parent_ctx)
     scheduled = []
     this_task = Task.new do |task_queue|
+      puts self
       if not ctx.alive?
         # exit
       elsif finished?(ctx)
@@ -76,7 +77,6 @@ class Procedure
         ctx.kill
         finish_block.call(actual_results)
       else
-
         ready = ready_commands(ctx)
         if ready.empty?
           raise "Procedure stuck" if ctx.bound?(Identifier.finally)
@@ -94,6 +94,10 @@ class Procedure
     end
     this_task
   end
+
+  def to_s
+    '<proc:'+@procname.name+'>'
+  end
 end
 
 class GCommand < Struct.new(:guards, :command)
@@ -105,6 +109,7 @@ class GCommand < Struct.new(:guards, :command)
   # @return new [Task] to run command if it is (still) ready
   def new_task(ctx)
     Task.new do |task_queue|
+      puts self
       #  by single-assignment true guards cannot become false
       raise "Guard error (single-assignment violation?)" unless guards.all?{|g| g.true?(ctx)}
       # don't run if task no longer ready (because )
@@ -112,6 +117,10 @@ class GCommand < Struct.new(:guards, :command)
         command.run(task_queue, ctx)
       end
     end
+  end
+
+  def to_s
+    'guarded' + command.to_s
   end
 end
 
@@ -161,6 +170,10 @@ class BlockCommand < Command
   def body(*params)
     @block.call(*params)
   end
+
+  def to_s
+    '<block:' + @block.to_s + '>'
+  end
 end
 
 class ProcCommand < Command
@@ -185,4 +198,9 @@ class ProcCommand < Command
 
     task_queue.push(task)
   end
+
+  def to_s
+    '<call:'+@procedure.to_s + '>'
+  end
+
 end

@@ -10,6 +10,10 @@ class Identifier
   def name
   	@name.to_str # remove parser tag
   end
+
+  def to_s
+    '<id:'+@name.to_str+'>'
+  end
 end
 
 class Str
@@ -21,5 +25,9 @@ class Str
   def self.unescape(x)
     return x unless x.is_a?(String)
     x.gsub('\"','"')
+  end
+
+  def to_s
+    @contents.map{|c| c.to_s}.join
   end
 end

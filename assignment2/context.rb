@@ -78,4 +78,8 @@ class Context
     @alive=false
   end
 
+  def to_s
+    '<ctx' + @alive + ':' + @vars + '>'
+  end
+
 end
