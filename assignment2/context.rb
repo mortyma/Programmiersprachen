@@ -7,12 +7,23 @@ class Context
     @vars={}
     @parent=parent
     @alive=true
+
+    @mutex = Mutex.new
+    @changed = ConditionVariable.new
+    
     set_multiple keys, values
   end
 
-  def set(key, value)
+  def do_set(key, value)
     unless @vars.key?(key.name) # Do not overwrite bound variables
       @vars[key.name] = value
+    end
+  end
+
+  def set(key, value)
+    @mutex.synchronize do
+      do_set(key, value)
+      @changed.broadcast
     end
   end
 
@@ -20,10 +31,13 @@ class Context
   # @param keys [Array<Identifier>]
   # @param values [Array<String>]
   def set_multiple(keys, values)
-    raise "Invalid size" unless keys.size == values.size
-    # pp keys,values
-    keys.zip(values).each do |var, val|
-      set(var,val) unless var.nil? or val.nil?
+    @mutex.synchronize do
+      raise "Invalid size" unless keys.size == values.size
+      # pp keys,values
+      keys.zip(values).each do |var, val|
+        do_set(var,val) unless var.nil? or val.nil?
+      end
+      @changed.broadcast
     end
   end
 
@@ -65,7 +79,6 @@ class Context
   #this is only a convinience method, consistency is ensured by single-assignment semantics
   # we ignore nils
   # @param list [Array<Identifier, Str, String, nil>]
-
   def all_bound?(list)
     list.all?{|x| x.nil? or bound?(x)}
   end
@@ -77,6 +90,12 @@ class Context
   def kill
     @alive=false
   end
+
+  def wait 
+    @mutex.synchronize do
+      @changed.wait(@mutex)
+    end
+  end 
 
   def to_s
     '<ctx' + @alive + ':' + @vars + '>'

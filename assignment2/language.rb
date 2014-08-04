@@ -84,9 +84,14 @@ class Procedure
           ready = ready_commands(ctx)
         end
 
-        (ready-scheduled).each do |cmd|
-          scheduled.push(cmd)
-          task_queue.push(cmd.new_task(ctx))
+        to_schedule = ready - scheduled
+        if to_schedule.empty?
+         ctx.wait
+        else
+          to_schedule.each do |cmd|
+            scheduled.push(cmd)
+            task_queue.push(cmd.new_task(ctx))
+          end
         end
 
         task_queue.push(this_task)
