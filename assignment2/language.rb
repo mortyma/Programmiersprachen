@@ -22,7 +22,10 @@ class Program
   # Run specified procedure call
   # @return results from procedure
   def run(procname, *args)
-    queue = queue_for_call(procname, *args) {|ret| return ret }
+    queue = queue_for_call(procname, *args) do |ret|
+      queue.kill
+      return ret
+    end
     queue.run
   end
 
