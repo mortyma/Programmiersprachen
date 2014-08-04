@@ -67,6 +67,7 @@ class Procedure
   # @return [Task] that enqueues all ready commands, and itself if there is any work left 
   def new_task(parent_ctx, *actual_params, &finish_block)
     ctx = Context.new(@params,actual_params,parent_ctx)
+    scheduled = []
     this_task = Task.new do |task_queue|
       if not ctx.alive?
         # exit
@@ -83,7 +84,8 @@ class Procedure
           ready = ready_commands(ctx)
         end
 
-        ready.each do |cmd|
+        (ready-scheduled).each do |cmd|
+          scheduled.push(cmd)
           task_queue.push(cmd.new_task(ctx))
         end
 
