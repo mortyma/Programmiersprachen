@@ -7,9 +7,7 @@ class Context
     @vars={}
     @parent=parent
     @alive=true
-
     @mutex = Mutex.new
-    @changed = ConditionVariable.new
     
     set_multiple keys, values
   end
@@ -23,7 +21,6 @@ class Context
   def set(key, value)
     @mutex.synchronize do
       do_set(key, value)
-      @changed.broadcast
     end
   end
 
@@ -37,7 +34,6 @@ class Context
       keys.zip(values).each do |var, val|
         do_set(var,val) unless var.nil? or val.nil?
       end
-      @changed.broadcast
     end
   end
 
@@ -91,11 +87,6 @@ class Context
     @alive=false
   end
 
-  def wait 
-    @mutex.synchronize do
-      @changed.wait(@mutex)
-    end
-  end 
 
   def to_s
     '<ctx' + @alive + ':' + @vars + '>'

@@ -69,7 +69,6 @@ class Procedure
     ctx = Context.new(@params,actual_params,parent_ctx)
     scheduled = []
     this_task = Task.new do |task_queue|
-      puts self
       if not ctx.alive?
         # exit
       elsif finished?(ctx)
@@ -85,13 +84,9 @@ class Procedure
         end
 
         to_schedule = ready - scheduled
-        if to_schedule.empty?
-         ctx.wait
-        else
-          to_schedule.each do |cmd|
-            scheduled.push(cmd)
-            task_queue.push(cmd.new_task(ctx))
-          end
+        to_schedule.each do |cmd|
+          scheduled.push(cmd)
+          task_queue.push(cmd.new_task(ctx))
         end
 
         task_queue.push(this_task)
