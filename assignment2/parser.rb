@@ -18,6 +18,8 @@ class GCParser < Parslet::Parser
   rule(:command) {
     name.as(:result) >> name.maybe.as(:stdout) >> spaced('=')  >>  spaced('exec') >> string.as(:cmd) >> string.maybe.as(:stdin)|
     name.as(:fst) >> name.as(:snd)  >> spaced('=') >> spaced('split') >> string.as(:delim) >> string.as(:str)|
+    # name.repeat(1).as(:results) >> spaced('=') >> spaced('call') >> string.as(:procname) >> string.repeat.as(:params) |
+    name.repeat(1).as(:results) >> spaced('=') >> spaced('map') >> name.as(:procname) >> string.as(:delim) >> string.repeat.as(:params) |
     name.repeat(1).as(:results) >> spaced('=') >> name.as(:procname) >> string.repeat.as(:params) |
     name.as(:l) >> spaced('=') >> string.repeat(1).as(:r)
   }
@@ -64,9 +66,15 @@ class GCAst < Parslet::Transform
     }
   }
 
+
 # procedure call
   rule(:results => sequence(:results), :procname =>simple(:procname), :params => sequence(:params)) {
     ProcCommand.new(results, procname, params)
+  }
+
+  # map procedure call
+  rule(:results => sequence(:results), :procname =>simple(:procname), :delim => simple(:delim), :params => sequence(:params)) {
+    MapCommand.new(results, procname, delim, params)
   }
 
 # assignment

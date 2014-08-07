@@ -36,6 +36,10 @@ program = parse(<<-'END'
          	d = sleep "$seconds$";
          }
 
+         maptest - "$x$"{
+          x = map sleep "," "1,1,1";
+        }
+
          sleep seconds - "$ret$" {
          	ret = exec "sleep $seconds$";
          }
@@ -45,6 +49,7 @@ program = parse(<<-'END'
 # ab  : max = maxnum;
 #            ab == "1" : bc == "0" : ac  b = split "s" "test $a$ -le $c$";
 
+puts program.run('maptest')
 # puts program.run('maxnum','1','400','2')
 
 Thread.abort_on_exception=true
@@ -55,8 +60,8 @@ q = program.queue_for_call('sleeps','5') { |ret|
   q.kill
 }
 
-workers = 1.upto(4).map { Thread.new { q.run } }
-workers.each{|t| t.join }
+# workers = 1.upto(4).map { Thread.new { q.run } }
+# workers.each{|t| t.join }
 
 #puts  program.run('maxnum','1','400','2')
 

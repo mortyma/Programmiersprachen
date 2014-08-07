@@ -34,7 +34,7 @@ class Program
     @procedures.values.each do |p|
       p.commands.each do |gcmd|
         cmd = gcmd.command
-        if cmd.is_a? ProcCommand
+        if cmd.respond_to? :procname
           procname = cmd.procname.name
           raise "Procedure not found " + procname unless @procedures.key? procname
           cmd.procedure = @procedures[procname]
@@ -204,6 +204,63 @@ class ProcCommand < Command
 
   def to_s
     '<call:'+@procedure.to_s + '>'
+  end
+
+end
+
+
+class MapCommand < Command
+  attr_reader :procname
+
+  def initialize(results, procname, delim, params)
+    super(results, params)
+    @procname=procname
+    @delim=delim
+  end
+
+  def procedure=(proc)
+    raise 'Invalid number of arguments' unless proc.params.size == @rvs.size
+    raise 'Invalid number of results' unless proc.results.size == @lvs.size
+    @procedure=proc
+  end
+
+  def ready?(ctx)
+    ctx.bound?(@delim) and super
+  end
+
+  def run(task_queue, ctx)
+    actual_params = ctx.get_multiple(@rvs)
+    delim = ctx.get(@delim)
+    actual_params.map! {|x| x.split(delim) }
+    
+    length =  actual_params[0].size
+    raise 'Unequal length of lists' unless actual_params.all?{ |x| x.size == length }
+    results = Array.new(length)
+
+    1.upto(length).zip(*actual_params).each do |i, *params|
+      task = @procedure.new_task(ctx, *params) do |actual_results|
+        results[i-1]=actual_results
+      end
+      task_queue.push(task)
+    end
+
+    task = Task.new do |task_queue|
+      if ctx.alive?
+        if results.all?{|x| not x.nil?} 
+          results = results.transpose
+          results.map! {|x| x.join(delim) }
+          ctx.set_multiple(@lvs,results)
+        else
+          task_queue.push(task)
+        end
+      end
+    end
+    task_queue.push(task)
+
+  end
+
+  def to_s
+    '<map:'+@procedure.to_s + '>'
   end
 
 end
