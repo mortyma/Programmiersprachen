@@ -62,7 +62,9 @@ class GCAst < Parslet::Transform
 # split
   rule(:fst => simple(:fst), :snd => simple(:snd), :delim => simple(:delim), :str=>simple(:str)) {
     BlockCommand.new([fst,snd],[delim, str]){|delim,str|
-      str.split(delim,2)
+      a, b = str.split(delim,2)
+      b ||= ""
+      [a, b]
     }
   }
 
