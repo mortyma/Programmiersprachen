@@ -43,13 +43,37 @@ program = parse(<<-'END'
          sleep seconds - "$ret$" {
          	ret = exec "sleep $seconds$";
          }
+
+        mmap lst - "$y$" {
+          lst == "" : y = "";
+          lst != "" : head tail = split "," "$lst$";
+          t = mmap "$tail$";
+          h = "($head$)";
+          tail == "" : y = "$h$";
+          tail != "" : y = "$h$,$t$";
+        }
+
+        foldl init lst - "$y$" {
+          lst == "" : y = "$init$";
+          lst != "" : head tail = split "," "$lst$";
+          z = "($init$-$head$)";
+          y = foldl "$z$" "$tail$";
+        }
+
+        foldr init lst - "$y$" {
+          lst == "" : y = "$init$";
+          lst != "" : head tail = split "," "$lst$";
+          t = foldr "$init$" "$tail$";
+          y = "($head$-$t$)";
+        }
   END
 )
 
 # ab  : max = maxnum;
 #            ab == "1" : bc == "0" : ac  b = split "s" "test $a$ -le $c$";
 
-puts program.run('maptest')
+puts program.run('foldl','x','2,3,4,5,6,')
+# puts program.run('maptest')
 # puts program.run('maxnum','1','400','2')
 
 Thread.abort_on_exception=true
