@@ -8,7 +8,7 @@ class Context
     @parent=parent
     @alive=true
     @mutex = Mutex.new
-    
+
     set_multiple keys, values
   end
 
@@ -29,7 +29,7 @@ class Context
   # @param values [Array<String>]
   def set_multiple(keys, values)
     @mutex.synchronize do
-      raise "Invalid size" unless keys.size == values.size
+      raise "Invalid size #{keys}=#{values}" unless keys.size == values.size
       # pp keys,values
       keys.zip(values).each do |var, val|
         do_set(var,val) unless var.nil? or val.nil?
@@ -43,7 +43,7 @@ class Context
     if x.is_a?(String)
       x
     elsif x.is_a?(Identifier)
-      raise "Variable not bound" unless @vars.key?(x.name)
+      raise "Variable not bound #{x}" unless @vars.key?(x.name)
       @vars[x.name]
     elsif x.is_a?(Str)
       x.contents.map{|e| get(e) }.join('')
@@ -89,7 +89,7 @@ class Context
 
 
   def to_s
-    '<ctx' + @alive + ':' + @vars + '>'
+    "<ctx #{@alive}: #{@vars}>"
   end
 
 end

@@ -6,9 +6,9 @@ class Task
 	end
 
 	def call(*args)
-		# puts '--------------start:'+@proc.to_s
+		# puts "--------------start:#{proc}"
 		@proc.call(*args)
-		# puts '--------------stop:'+@proc.to_s
+		# puts "--------------stop:#{proc}"
 
 	end
 end

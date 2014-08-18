@@ -36,7 +36,7 @@ class Program
         cmd = gcmd.command
         if cmd.respond_to? :procname
           procname = cmd.procname.name
-          raise "Procedure not found " + procname unless @procedures.key? procname
+          raise "Procedure not found: #{procname} " unless @procedures.key? procname
           cmd.procedure = @procedures[procname]
         end
       end
@@ -67,7 +67,7 @@ class Procedure
   # create a Task corresponding to the procedure call
   # @param *args [*String] arguments to the procedure
   # @param &finish_block [Block] block to yield results to
-  # @return [Task] that enqueues all ready commands, and itself if there is any work left 
+  # @return [Task] that enqueues all ready commands, and itself if there is any work left
   def new_task(parent_ctx, *actual_params, &finish_block)
     ctx = Context.new(@params,actual_params,parent_ctx)
     scheduled = []
@@ -81,7 +81,7 @@ class Procedure
       else
         ready = ready_commands(ctx)
         if ready.empty?
-          raise "Procedure stuck" if ctx.bound?(Identifier.finally)
+          raise "Procedure stuck #{self} #{ctx}" if ctx.bound?(Identifier.finally)
           ctx.set(Identifier.finally,'')
           ready = ready_commands(ctx)
         end
@@ -99,7 +99,7 @@ class Procedure
   end
 
   def to_s
-    '<proc:'+@procname.name+'>'
+    "<proc:#{@procname.name}>"
   end
 end
 
@@ -114,7 +114,7 @@ class GCommand < Struct.new(:guards, :command)
     Task.new do |task_queue|
       puts self
       #  by single-assignment true guards cannot become false
-      raise "Guard error (single-assignment violation?)" unless guards.all?{|g| g.true?(ctx)}
+      raise "Guard error (single-assignment violation?) in #{self}" unless guards.all?{|g| g.true?(ctx)}
       # don't run if task no longer ready (because )
       if command.ready?(ctx) and ctx.alive?
         command.run(task_queue, ctx)
@@ -123,7 +123,7 @@ class GCommand < Struct.new(:guards, :command)
   end
 
   def to_s
-    'guarded' + command.to_s
+    "guarded#{command}"
   end
 end
 
@@ -131,7 +131,7 @@ class Guard
   # @param rvs [Array] formal parameters
   # @param condition [block] closure to be called with actual parameters
   def initialize(rvs, &condition)
-    @condition = condition || Proc.new {true}
+    @condition = condition || proc {true}
     @rvs = rvs
   end
 
@@ -175,7 +175,7 @@ class BlockCommand < Command
   end
 
   def to_s
-    '<block:' + @block.to_s + '>'
+    "<block:#{@block}>"
   end
 end
 
@@ -188,8 +188,8 @@ class ProcCommand < Command
   end
 
   def procedure=(proc)
-    raise 'Invalid number of arguments' unless proc.params.size == @rvs.size
-    raise 'Invalid number of results' unless proc.results.size == @lvs.size
+    raise "Invalid number of arguments #{proc}" unless proc.params.size == @rvs.size
+    raise "Invalid number of results #{proc}" unless proc.results.size == @lvs.size
     @procedure=proc
   end
 
@@ -203,7 +203,7 @@ class ProcCommand < Command
   end
 
   def to_s
-    '<call:'+@procedure.to_s + '>'
+    "<call:#{@procedure}>"
   end
 
 end
@@ -219,8 +219,8 @@ class MapCommand < Command
   end
 
   def procedure=(proc)
-    raise 'Invalid number of arguments' unless proc.params.size == @rvs.size
-    raise 'Invalid number of results' unless proc.results.size == @lvs.size
+    raise "Invalid number of arguments #{proc}" unless proc.params.size == @rvs.size
+    raise "Invalid number of results #{proc}" unless proc.results.size == @lvs.size
     @procedure=proc
   end
 
@@ -232,9 +232,9 @@ class MapCommand < Command
     actual_params = ctx.get_multiple(@rvs)
     delim = ctx.get(@delim)
     actual_params.map! {|x| x.split(delim) }
-    
+
     length =  actual_params[0].size
-    raise 'Unequal length of lists' unless actual_params.all?{ |x| x.size == length }
+    raise "Unequal length of lists #{actual_params} in #{self}" unless actual_params.all?{ |x| x.size == length }
     results = Array.new(length)
 
     1.upto(length).zip(*actual_params).each do |i, *params|
@@ -246,7 +246,7 @@ class MapCommand < Command
 
     task = Task.new do |task_queue|
       if ctx.alive?
-        if results.all?{|x| not x.nil?} 
+        if results.all?{|x| not x.nil?}
           results = results.transpose
           results.map! {|x| x.join(delim) }
           ctx.set_multiple(@lvs,results)
@@ -260,7 +260,7 @@ class MapCommand < Command
   end
 
   def to_s
-    '<map:'+@procedure.to_s + '>'
+    "<map:#{procname}>"
   end
 
 end
