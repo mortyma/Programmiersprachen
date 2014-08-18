@@ -37,7 +37,7 @@ program = parse(<<-'END'
          }
 
          maptest - "$x$"{
-          x = map sleep "," "1,1,1";
+          x = map sleep "," "2,2,2,2";
         }
 
          sleep seconds - "$ret$" {
@@ -48,7 +48,7 @@ program = parse(<<-'END'
           lst == "" : y = "";
           lst != "" : head tail = split "," "$lst$";
           t = mmap "$tail$";
-          h = "($head$)";
+          h = sleep "$head$";
           tail == "" : y = "$h$";
           tail != "" : y = "$h$,$t$";
         }
@@ -73,19 +73,19 @@ program = parse(<<-'END'
 #            ab == "1" : bc == "0" : ac  b = split "s" "test $a$ -le $c$";
 
 puts program.run('foldl','x','2,3,4,5,6,')
-# puts program.run('maptest')
+puts program.run('maptest')
 # puts program.run('maxnum','1','400','2')
 
 Thread.abort_on_exception=true
 
 # q = program.queue_for_call('maxnum','1','400','2') { |ret| pp ret; q.kill }
-q = program.queue_for_call('sleeps','5') { |ret| 
+q = program.queue_for_call('mmap','2,2,2,2,2,2') { |ret| 
   pp ret
   q.kill
 }
 
-# workers = 1.upto(4).map { Thread.new { q.run } }
-# workers.each{|t| t.join }
+workers = 1.upto(6).map { Thread.new { q.run } }
+workers.each{|t| t.join }
 
 #puts  program.run('maxnum','1','400','2')
 
