@@ -1,5 +1,6 @@
 import Control.Exception
 import Control.Monad.State
+-- import Data.List.Split
 import System.Console.ANSI  -- http://hackage.haskell.org/package/ansi-terminal-0.5.0/docs/System-Console-ANSI.html#2
 import System.IO
 import System.IO.Error
@@ -12,17 +13,67 @@ intro = "[ESC+o] Open file\t" ++  -- Note: We do not use CTRL+, as those key com
         "[ESC+s] Save file\t" ++
         "[ESC+x] Exit\t"
         
+type EditorState = (Int, [Char]) -- (Cursor pos, text)
+        
+
+-- insert a character into the text at the current cursor position. Cursor position advanced by 1
+insert :: Char -> State EditorState () 
+insert c = state $ \(p,xs) -> ((), (p+1 , let (ys,zs) = splitAt p xs in ys++c:zs))
+
+foo :: State EditorState ()
+foo = do  
+    put (2, "ABC")
+    
+-- runState foo (0,[])
+-- runState foo ['a','b','c','d']
+
+-- execState foo (0,[]) -- return result
+-- evalState foo (0, []) -- return final state
+
+-- evalState :: State s a -> s -> a
+-- evalState act = fst . runState act
+ 
+-- execState :: State s a -> s -> s
+-- execState act = snd . runState act
+    
+-- -----------------------------------------------------------------------------
+-- State + IO example
+-- http://www.haskell.org/haskellwiki/Simple_StateT_use
+-- -----------------------------------------------------------------------------
+main :: IO ()
+main = runStateT code [1..] >> return ()
+
+-- layer an infinite list of uniques over the IO monad
+code :: StateT [Integer] IO ()
+code = do
+    x <- pop
+    io $ print x
+    y <- pop 
+    io $ print y
+    return ()
+    
+-- pop the next unique off the stack
+pop :: StateT [Integer] IO Integer
+pop = do 
+    (x:xs) <- get
+    put xs
+    return x
+
+io :: IO a -> StateT [Integer] IO a
+io = liftIO
+    
 -- -----------------------------------------------------------------------------
 -- main
 -- -----------------------------------------------------------------------------
-main = forever $ do 
+-- main = do 
 --     printIntro
     -- configure streams
-    hSetBuffering stdin NoBuffering 
-    hSetBuffering stdout NoBuffering
-    hSetEcho stdin False
-    c <- readNext
-    processInput c
+--     hSetBuffering stdin NoBuffering 
+--     hSetBuffering stdout NoBuffering
+--     hSetEcho stdin False    
+--     display (runState foo (0,[]))
+--     forever $ do
+--         readNext >>= processInput
  
 -- -----------------------------------------------------------------------------
 -- Input processing
@@ -40,7 +91,9 @@ printIntro = do
 
 processInput :: Char -> IO ()
 processInput '\x1b' = readNext >>= esc     -- matched escape character; read (next part of) escape character code and process it
-processInput c = putChar c         -- any other character is simply printed to stdout
+processInput c = 
+--     insert c 
+    putChar c         -- any other character is simply printed to stdout
     
 -- Assumes the character read before c was ESC and thus processes the following characters as escape codes.
 esc :: Char -> IO ()
@@ -56,8 +109,8 @@ esc c = putStrLn $ "Unexpected escape char: " ++ (show c)
 escSqBracket :: Char -> IO ()
 escSqBracket 'A' = cursorUpLine 1
 escSqBracket 'B' = cursorDownLine 1
-escSqBracket 'C' = cursorBackward 1
-escSqBracket 'D' = cursorForward 1
+escSqBracket 'C' = cursorForward 1
+escSqBracket 'D' = cursorBackward 1
 escSqBracket c = putStrLn $ "Unexpected escape char: " ++ (show c)
     
 
@@ -73,6 +126,12 @@ defaultMode = hSetEcho stdin True -- TODO: special characters like backspace not
 -- -----------------------------------------------------------------------------
 -- Screen manipulation
 -- -----------------------------------------------------------------------------
+display :: EditorState -> IO ()
+display (p, xs) = do
+    clearScreen
+    putStr xs
+    setCursorPosition 0 p
+
 resetScreen :: String -> IO ()
 resetScreen s = do
     clearScreen
