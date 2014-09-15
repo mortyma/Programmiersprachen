@@ -13,7 +13,7 @@ type Text = [Char]
 type EditorState = (Int, Text) -- (Cursor pos, text)
         
 -- initial state
-initalState = (0,[])
+initialState = (0,[])
 
 -- Size of the xterm window our editor runs in. Assumed to be constant (i.e., don't change the window size of the xterm or things will get really weird)
 nrCols = 150
@@ -37,7 +37,7 @@ main = do
     hSetBuffering stdout NoBuffering
     hSetEcho stdin False    
     printFooter 0 0
-    execStateT process initalState     -- run the editor
+    execStateT process initialState     -- run the editor
     putStrLn "bye"              -- this is only here because the last statement needs to be an expression with result type IO
 
 -- -----------------------------------------------------------------------------
@@ -138,10 +138,8 @@ esc :: Char -> StateT EditorState IO ()
 esc '[' = (lift readNext) >>= escSqBracket 
 esc 'o' = (lift $ savelyOpen ofPrompt) >>= loadText --in put (0, loadedText)
 esc 's' = get >>= saveText
-esc 'n' = do                         -- TODO
-        put (0,"")
-        
-esc c = lift $ putStrLn ("Unexpected escape char: " ++ (show c))
+esc 'n' = put initialState
+esc c = return () -- ignore
     
 -- Assumes that the characters read before c were ESC[ and processes the following character as part of the arrow key scancode.
 escSqBracket :: Char -> StateT EditorState IO ()
@@ -149,7 +147,7 @@ escSqBracket 'A' = lift $ cursorUpLine 1 -- TODO
 escSqBracket 'B' = lift $ cursorDownLine 1 -- TODO
 escSqBracket 'C' = cForward 
 escSqBracket 'D' = cBackward 
-escSqBracket c = lift $ putStrLn ("Unexpected escape char: " ++ (show c))
+escSqBracket c = return () -- ignore
     
 loadText :: Text -> StateT EditorState IO ()
 loadText t = put (0,t)
