@@ -179,7 +179,7 @@ saveText (p,t) = lift $ savelyWrite t sfPrompt
 -- Default mode: Let the terminal handle keystrokes (i.e., print the in the terminal)
 -- -----------------------------------------------------------------------------
 echoOff = hSetEcho stdin False
-echoOn = hSetEcho stdin True -- TODO: special characters like backspace not processed correctly
+echoOn = hSetEcho stdin True
 
     
 -- -----------------------------------------------------------------------------
