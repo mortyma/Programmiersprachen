@@ -66,7 +66,7 @@ insertAt c xs p = let (ys,zs) = splitAt p xs in ys++c:zs
 -- Return:      Int cp=(x,y): cursor position on screen
 -- Algorithm:
 --      IF cursor is at very end of text AND last character is \n
---          THEN RETURN (nr of lines, 0)
+--          THEN RETURN (nr of lines + nr wrapped lines, 0)
 --          ELSE    l1 <- Split the text into lines
 --                  l2 <- length of each line + 1 (we assume that each line ends with \n)
 --                  l3 <- prefix sum over l2
@@ -79,7 +79,7 @@ cursorPosition :: Text -> Int -> (Int, Int)
 cursorPosition [] _ = (0,0)
 cursorPosition text p =     
     if (p == (length text)) && (text!!(p-1) == '\n')
-       then (length (lines text), 0) -- If the last character is a newline, the else branch will give a wrong line number (because we add +1 to the length of every line)
+       then (length (lines text) + (nrLineWraps text p) , 0) -- If the last character is a newline, the else branch will give a wrong line number (because we add +1 to the length of every line)
        else (lineNr + (nrLineWraps text p),  mod colNr nrCols )               
             where   sl = scanl (+) 0 $ map ((+1) . length) (lines text) -- find out how many characters there are in each line (+1 for newlines) and do prefix sum
                     lineNr = case findIndex (>p) sl of  -- find out in which line we are at
