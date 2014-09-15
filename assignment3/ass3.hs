@@ -16,8 +16,8 @@ type EditorState = (Int, Text) -- (Cursor pos, text)
 initalState = (0,[])
 
 -- Size of the xterm window our editor runs in. Assumed to be constant (i.e., don't change the window size of the xterm or things will get really weird)
-nrLines = 20
-nrCols = 20
+nrCols = 150
+nrRows = 50
 
 -- intro text
 intro = "[ESC+o] Open file\t" ++  -- Note: We do not use CTRL+, as those key combinations are appearently caught by the terminal

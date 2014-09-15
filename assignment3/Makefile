@@ -8,6 +8,6 @@ bake: ass3.hs
 	ghc -o ass3 ass3.hs -XDataKinds
 
 run: bake
-	xterm ./ass3 -geometry 20x20
+	xterm ./ass3 -geometry 150x50
 clean:
 	rm ass3 *.o *.hi -f
