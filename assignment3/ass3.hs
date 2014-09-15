@@ -70,8 +70,9 @@ insertAt c xs p = let (ys,zs) = splitAt p xs in ys++c:zs
 --          ELSE    l1 <- Split the text into lines
 --                  l2 <- length of each line + 1 (we assume that each line ends with \n)
 --                  l3 <- prefix sum over l2
---                  find line s.t. l3[line] > p (find the line in which text[p] will be displayed)
---                  column <- p - nr of characters in all lines before line
+--                  line <- s.t. l3[line] > p (find the line in which text[p] will be displayed)
+--                  line <- line + nr lines with length > nrCols up until position p in the text
+--                  column <- p - nr of characters in all lines before line, mod nr of columns
 --                  RETURN (line, column)
 -- -----------------------------------------------------------------------------
 cursorPosition :: Text -> Int -> (Int, Int)
@@ -79,13 +80,23 @@ cursorPosition [] _ = (0,0)
 cursorPosition text p =     
     if (p == (length text)) && (text!!(p-1) == '\n')
        then (length (lines text), 0) -- If the last character is a newline, the else branch will give a wrong line number (because we add +1 to the length of every line)
-       else (lineNr-1, colNr)               
+       else (lineNr + (nrLineWraps text p),  mod colNr nrCols )               
             where   sl = scanl (+) 0 $ map ((+1) . length) (lines text) -- find out how many characters there are in each line (+1 for newlines) and do prefix sum
-                    lineNr = case findIndex (>p) sl of  -- find out in which line we are 
-                        Just val -> val
+                    lineNr = case findIndex (>p) sl of  -- find out in which line we are at
+                        Just val -> val - 1
                         Nothing -> -1          --TODO: this can never happen
-                    colNr = p - sl!!(lineNr-1) -- substract nr of characters in all lines before lineNr
-                    
+                    colNr = mod (p - sl!!(lineNr)) nrCols  -- substract nr of characters in all lines before lineNr and do mod nrCols since we wrap long lines)
+
+-- Count number of line wraps that occur in the text up until the given position                 
+-- In other words: find lines longer than nrCols (up to given position p in text) and then calculate how often they will wrap
+nrLineWraps :: Text -> Int -> Int
+nrLineWraps text p = sum wrapCnt
+    where 
+        t = lines (take p text)                 -- lines up until position p
+        ll = filter ((>=nrCols) . length) t     -- long lines 
+        lll = map length ll                     -- length of the long lines
+        wrapCnt = map (\x -> div x nrCols) lll           -- how often they will wrap
+
 -- -----------------------------------------------------------------------------
 -- Changing cursor position
 -- -----------------------------------------------------------------------------
