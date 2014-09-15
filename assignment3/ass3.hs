@@ -138,9 +138,9 @@ esc :: Char -> StateT EditorState IO ()
 esc '[' = (lift readNext) >>= escSqBracket 
 esc 'o' = (lift $ savelyOpen ofPrompt) >>= loadText --in put (0, loadedText)
 esc 's' = get >>= saveText
--- esc 'x' = do                         -- TODO
---     resetScreen "New file"
---     echoOff    
+esc 'n' = do                         -- TODO
+        put (0,"")
+        
 esc c = lift $ putStrLn ("Unexpected escape char: " ++ (show c))
     
 -- Assumes that the characters read before c were ESC[ and processes the following character as part of the arrow key scancode.
