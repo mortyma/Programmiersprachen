@@ -1,6 +1,7 @@
 import Control.Exception
 import Control.Monad.State
 import Data.List
+import Data.Char (ord)
 -- import Data.List.Split
 import System.Console.ANSI  -- http://hackage.haskell.org/package/ansi-terminal-0.5.0/docs/System-Console-ANSI.html#2
 import System.IO
@@ -57,12 +58,37 @@ process = do
         lift $ setCursorPosition (fst cp) (snd cp)  -- set actual cursor position
     process
 
--- insert a character into the text at the current cursor position. Cursor position advanced by 1
+-- -----------------------------------------------------------------------------
+-- handling key strokes
+-- -----------------------------------------------------------------------------
 insertChar :: Char -> StateT EditorState IO ()
 insertChar c = state $ \(p,xs) -> ((), (p+1 , insertAt c xs p))
-   
+
 insertAt :: Char -> Text -> Int -> Text
 insertAt c xs p = let (ys,zs) = splitAt p xs in ys++c:zs
+   
+backspace ::StateT EditorState IO ()
+backspace = state $ \(p,xs) -> ((), (max 0 (p-1), removeAt (p-1) xs))
+
+deleteKey ::StateT EditorState IO ()
+deleteKey = state $ \(p,xs) -> ((), (p, removeAt (p) xs))
+
+removeAt :: Int -> Text -> Text
+removeAt (-1) xs = xs
+removeAt i xs | i >= (length xs) = xs
+              | otherwise = let (ys,zs) = splitAt i xs in ys++(tail zs)
+    
+-- -----------------------------------------------------------------------------
+-- Changing cursor position
+-- -----------------------------------------------------------------------------
+setCursor :: Int -> StateT EditorState IO ()
+setCursor x = state $ \(p,xs) -> ((), (x, xs))
+
+cForward :: StateT EditorState IO ()
+cForward = state $ \(p,xs) -> ((), (min (p+1) (length xs), xs))
+
+cBackward :: StateT EditorState IO ()
+cBackward = state $ \(p,xs) -> ((), (max (p-1) 0, xs))
  
 -- -----------------------------------------------------------------------------
 -- Calculating cursor position on screen
@@ -101,18 +127,6 @@ nrLineWraps text p = sum wrapCnt
         ll = filter ((>=nrCols) . length) t     -- long lines 
         lll = map length ll                     -- length of the long lines
         wrapCnt = map (\x -> div x nrCols) lll           -- how often they will wrap
-
--- -----------------------------------------------------------------------------
--- Changing cursor position
--- -----------------------------------------------------------------------------
-setCursor :: Int -> StateT EditorState IO ()
-setCursor x = state $ \(p,xs) -> ((), (x, xs))
-
-cForward :: StateT EditorState IO ()
-cForward = state $ \(p,xs) -> ((), (min (p+1) (length xs), xs))
-
-cBackward :: StateT EditorState IO ()
-cBackward = state $ \(p,xs) -> ((), (max (p-1) 0, xs))
        
 -- -----------------------------------------------------------------------------
 -- Syntax highlighting
@@ -131,9 +145,10 @@ readNext = getChar
     
 processInput :: Char -> StateT EditorState IO ()
 processInput '\x1b' = (lift readNext) >>= esc  -- matched escape character; read (next part of) escape character code and process it
--- processInput '\n' = lift $ putStrLn "\n"
--- processInput '\r' = lift $ putStrLn "\r"
-processInput c =  insertChar c  -- any other character is simply added to our text buffer
+processInput '\x7f' =  backspace -- backspace
+processInput '\x7e' = deleteKey -- delete
+-- processInput c = do {lift $ putStrLn (show (ord c)); (lift readNext) >>= esc} -- A helper to find out keycodes 
+processInput c = insertChar c  -- any other character is simply added to our text buffer
     
 -- Assumes the character read before c was ESC and thus processes the following characters as escape codes.
 esc :: Char -> StateT EditorState IO ()
