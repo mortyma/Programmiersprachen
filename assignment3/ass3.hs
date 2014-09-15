@@ -25,6 +25,7 @@ footer = "[ESC+o] Open file\t" ++  -- Note: We do not use CTRL+, as those key co
         "[ESC+n] New file\t"
 
 ofPrompt = "Tell me which file you want to edit: "
+sfPrompt = "Tell me where to save: "
 whoops = "Whoops, something went wrong: "
 -- -----------------------------------------------------------------------------
 -- main
@@ -136,8 +137,7 @@ processInput c =  insertChar c  -- any other character is simply added to our te
 esc :: Char -> StateT EditorState IO ()
 esc '[' = (lift readNext) >>= escSqBracket 
 esc 'o' = (lift $ savelyOpen ofPrompt) >>= loadText --in put (0, loadedText)
---     where 
-esc 's' = lift savelyWrite
+esc 's' = get >>= saveText
 -- esc 'x' = do                         -- TODO
 --     resetScreen "New file"
 --     echoOff    
@@ -153,6 +153,9 @@ escSqBracket c = lift $ putStrLn ("Unexpected escape char: " ++ (show c))
     
 loadText :: Text -> StateT EditorState IO ()
 loadText t = put (0,t)
+
+saveText :: (Int, Text) ->  StateT EditorState IO ()
+saveText (p,t) = lift $ savelyWrite t sfPrompt
 -- -----------------------------------------------------------------------------
 -- Modes:
 -- Edit mode: catch all keystrokes and process them
@@ -174,43 +177,37 @@ printFooter r c = do
     putStrLn footer
     putStr $ replicate nrCols '-'
     
-resetScreen :: String -> IO ()
-resetScreen s = do
-    clearScreen
-    setCursorPosition 0 0
-    setTitle s
+statusLine :: String -> IO ()
+statusLine s = do
+    echoOn
+    setCursorPosition (nrRows -4) 0
+    putStr s
+    setCursorPosition (nrRows -4) (length s)
     
 -- -----------------------------------------------------------------------------
 -- File IO
 -- -----------------------------------------------------------------------------
 savelyOpen :: String -> IO String
 savelyOpen s = do
-    echoOn
-    setCursorPosition (nrRows -4) 0
-    putStr s
-    setCursorPosition (nrRows -4) (length s)
+    statusLine s
     rf <- getLine
     result <- try (readFile rf) :: IO (Either SomeException String)
     case result of
         Left ex -> savelyOpen $ whoops ++ show ex ++ " " ++ ofPrompt
-        Right content -> do
-            resetScreen rf
+        Right t -> do
+            setTitle rf
             echoOff
-            return content
+            return t
                             
-savelyWrite:: IO ()  
-savelyWrite = do 
-    resetScreen "Saving file" -- TODO: Saving files needs to be handled better
-    echoOn
-    putStr "Tell me where to save: "
+savelyWrite:: Text -> String -> IO ()  
+savelyWrite t s = do 
+    statusLine s    
     wf <- getLine
-    result <- try (writeFile wf "foo") :: IO (Either SomeException ())
+    result <- try (writeFile wf t) :: IO (Either SomeException ())
     case result of
-        Left ex  -> do
-            putStrLn $ "Whops, something went wrong: " ++ show ex
-            savelyWrite
+        Left ex -> savelyWrite t (whoops ++ show ex ++ " " ++ sfPrompt)
         Right res -> do
-            resetScreen "New file"
+            setTitle wf
             echoOff
 
 
