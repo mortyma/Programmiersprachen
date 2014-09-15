@@ -27,6 +27,7 @@ footer = "[ESC+o] Open file\t" ++  -- Note: We do not use CTRL+, as those key co
 ofPrompt = "Tell me which file you want to edit: "
 sfPrompt = "Tell me where to save: "
 whoops = "Whoops, something went wrong: "
+nf = "New file"
 -- -----------------------------------------------------------------------------
 -- main
 -- -----------------------------------------------------------------------------
@@ -37,6 +38,7 @@ main = do
     hSetBuffering stdout NoBuffering
     hSetEcho stdin False    
     printFooter 0 0
+    setTitle nf
     execStateT process initialState     -- run the editor
     putStrLn "bye"              -- this is only here because the last statement needs to be an expression with result type IO
 
@@ -138,7 +140,9 @@ esc :: Char -> StateT EditorState IO ()
 esc '[' = (lift readNext) >>= escSqBracket 
 esc 'o' = (lift $ savelyOpen ofPrompt) >>= loadText --in put (0, loadedText)
 esc 's' = get >>= saveText
-esc 'n' = put initialState
+esc 'n' = do
+    put initialState
+    lift $ setTitle nf
 esc c = return () -- ignore
     
 -- Assumes that the characters read before c were ESC[ and processes the following character as part of the arrow key scancode.
