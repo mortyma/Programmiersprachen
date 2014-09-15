@@ -131,8 +131,8 @@ esc c = lift $ putStrLn ("Unexpected escape char: " ++ (show c))
     
 -- Assumes that the characters read before c were ESC[ and processes the following character as part of the arrow key scancode.
 escSqBracket :: Char -> StateT EditorState IO ()
-escSqBracket 'A' = lift $ cursorUpLine 1
-escSqBracket 'B' = lift $ cursorDownLine 1
+escSqBracket 'A' = lift $ cursorUpLine 1 -- TODO
+escSqBracket 'B' = lift $ cursorDownLine 1 -- TODO
 escSqBracket 'C' = cForward 
 escSqBracket 'D' = cBackward 
 escSqBracket c = lift $ putStrLn ("Unexpected escape char: " ++ (show c))
