@@ -19,12 +19,12 @@ initalState = (0,[])
 nrCols = 150
 nrRows = 50
 
--- intro text
-intro = "[ESC+o] Open file\t" ++  -- Note: We do not use CTRL+, as those key combinations are appearently caught by the terminal
-        "[ESC+s] Save file\t" ++
-        "[ESC+x] Exit\t"
 
-tt = "AB\nC\nDEFG\n\nHIJKLMNOP\n"        
+-- footer text (make sure it's shorter than nrCols)
+footer = "[ESC+o] Open file\t" ++  -- Note: We do not use CTRL+, as those key combinations are appearently caught by the terminal
+        "[ESC+s] Save file\t" ++
+        "[ESC+n] New file\t"
+   
 -- -----------------------------------------------------------------------------
 -- main
 -- -----------------------------------------------------------------------------
@@ -34,6 +34,7 @@ main = do
     hSetBuffering stdin NoBuffering 
     hSetBuffering stdout NoBuffering
     hSetEcho stdin False    
+    printFooter 0 0
     execStateT process initalState     -- run the editor
     putStrLn "bye"              -- this is only here because the last statement needs to be an expression with result type IO
 
@@ -48,7 +49,7 @@ process = do
     lift $ setCursorPosition 0 0            -- set cursor to 0,0 so that...
     lift $ putStr (highlight text)          -- ...text is printed correctly
     let cp = cursorPosition text p in do    -- calculate cursor position
-        lift $ putStrLn ("  " ++ (show p ) ++ "->" ++ show (fst cp) ++ ":" ++ show (snd cp) ++ "   ") -- TODO: remove debug code
+        lift $ printFooter (fst cp) (snd cp)  
         lift $ setCursorPosition (fst cp) (snd cp)  -- set actual cursor position
     process
 
@@ -161,12 +162,14 @@ defaultMode = hSetEcho stdin True -- TODO: special characters like backspace not
 -- -----------------------------------------------------------------------------
 -- Screen manipulation
 -- -----------------------------------------------------------------------------
--- Clear screen and print some nice intro text
-printIntro :: IO ()
-printIntro = do 
-    clearScreen
---     putStr moveTo11 --move cursor to position (1,1)
-    putStrLn intro
+-- Print the footer
+printFooter :: Int -> Int -> IO ()
+printFooter r c = do 
+    setCursorPosition (nrRows - 3) 0
+    putStrLn $ replicate nrCols '-'
+    putStr ("  " ++ show r ++ ":" ++ show c ++ "\t\t") 
+    putStrLn footer
+    putStr $ replicate nrCols '-'
     
 resetScreen :: String -> IO ()
 resetScreen s = do
