@@ -42,13 +42,13 @@ main = do
 -- -----------------------------------------------------------------------------
 process :: StateT EditorState IO ()
 process = do
-    (lift readNext) >>= processInput    -- wait for next keystroke and process it
-    (p,text) <- get                     -- get current state of our editor  
+    (lift readNext) >>= processInput        -- wait for next keystroke and process it
+    (p,text) <- get                         -- get current state of our editor  
     lift clearScreen                  
-    lift $ setCursorPosition 0 0        -- set cursor to 0,0 so that...
-    lift $ putStr (highlight text)      -- text is printed correctly
-    let cp = cursorPosition text p in do                  -- calculate cursor position
-        lift $ putStrLn ("  " ++ (show p ) ++ "->" ++ show (fst cp) ++ ":" ++ show (snd cp) ++ "   ")
+    lift $ setCursorPosition 0 0            -- set cursor to 0,0 so that...
+    lift $ putStr (highlight text)          -- ...text is printed correctly
+    let cp = cursorPosition text p in do    -- calculate cursor position
+        lift $ putStrLn ("  " ++ (show p ) ++ "->" ++ show (fst cp) ++ ":" ++ show (snd cp) ++ "   ") -- TODO: remove debug code
         lift $ setCursorPosition (fst cp) (snd cp)  -- set actual cursor position
     process
 
@@ -58,6 +58,7 @@ insertChar c = state $ \(p,xs) -> ((), (p+1 , insertAt c xs p))
    
 insertAt :: Char -> Text -> Int -> Text
 insertAt c xs p = let (ys,zs) = splitAt p xs in ys++c:zs
+ 
 -- -----------------------------------------------------------------------------
 -- Calculating cursor position on screen
 -- Arguments:   String text: contains the text to display, including \n;
@@ -74,6 +75,7 @@ insertAt c xs p = let (ys,zs) = splitAt p xs in ys++c:zs
 --                  RETURN (line, column)
 -- -----------------------------------------------------------------------------
 cursorPosition :: Text -> Int -> (Int, Int)
+cursorPosition [] _ = (0,0)
 cursorPosition text p =     
     if (p == (length text)) && (text!!(p-1) == '\n')
        then (length (lines text), 0) -- If the last character is a newline, the else branch will give a wrong line number (because we add +1 to the length of every line)
@@ -83,7 +85,19 @@ cursorPosition text p =
                         Just val -> val
                         Nothing -> -1          --TODO: this can never happen
                     colNr = p - sl!!(lineNr-1) -- substract nr of characters in all lines before lineNr
+                    
+-- -----------------------------------------------------------------------------
+-- Changing cursor position
+-- -----------------------------------------------------------------------------
+setCursor :: Int -> StateT EditorState IO ()
+setCursor x = state $ \(p,xs) -> ((), (x, xs))
 
+cForward :: StateT EditorState IO ()
+cForward = state $ \(p,xs) -> ((), (min (p+1) (length xs), xs))
+
+cBackward :: StateT EditorState IO ()
+cBackward = state $ \(p,xs) -> ((), (max (p-1) 0, xs))
+       
 -- -----------------------------------------------------------------------------
 -- Syntax highlighting
 -- -----------------------------------------------------------------------------
@@ -92,11 +106,6 @@ highlight s = s  -- TODO: This is a dummy implementation. Highlight portions of 
 -- "\x1b[31m" ++ "Make me red" ++ "\x1b[0m" ++ " but leave me black" --color text
 -- Here be syntax highlighting magic
        
-
--- change the cursor position
-changeCursor :: Int -> StateT EditorState IO ()
-changeCursor x = state $ \(p,xs) -> ((), (p+x, xs))
-
 -- -----------------------------------------------------------------------------
 -- Input processing
 -- -----------------------------------------------------------------------------
@@ -124,8 +133,8 @@ esc c = lift $ putStrLn ("Unexpected escape char: " ++ (show c))
 escSqBracket :: Char -> StateT EditorState IO ()
 escSqBracket 'A' = lift $ cursorUpLine 1
 escSqBracket 'B' = lift $ cursorDownLine 1
-escSqBracket 'C' = changeCursor 1
-escSqBracket 'D' = changeCursor (-1)
+escSqBracket 'C' = cForward 
+escSqBracket 'D' = cBackward 
 escSqBracket c = lift $ putStrLn ("Unexpected escape char: " ++ (show c))
     
 
@@ -148,12 +157,6 @@ printIntro = do
 --     putStr moveTo11 --move cursor to position (1,1)
     putStrLn intro
     
-display :: EditorState -> IO ()
-display (p, xs) = do
-    clearScreen
-    putStr xs
-    setCursorPosition 0 p
-
 resetScreen :: String -> IO ()
 resetScreen s = do
     clearScreen
