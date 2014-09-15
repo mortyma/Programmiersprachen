@@ -39,13 +39,21 @@ process = do
     (p,text) <- get                       -- get current state of our editor  
     lift clearScreen                  
     lift $ setCursorPosition 0 0
-    lift $ putStr text
+    lift $ putStr (highlight text)
     process
 
 -- insert a character into the text at the current cursor position. Cursor position advanced by 1
 insert :: Char -> StateT EditorState IO ()
 insert c = state $ \(p,xs) -> ((), (p+1 , let (ys,zs) = splitAt p xs in ys++c:zs))
-                                              
+       
+-- -----------------------------------------------------------------------------
+-- Syntax highlighting
+-- -----------------------------------------------------------------------------
+highlight:: String -> String
+highlight s = s  -- TODO: This is a dummy implementation. Highlight portions of text by inserting color codes like this:
+-- "\x1b[31m" ++ "Make me red" ++ "\x1b[0m" ++ " but leave me black" --color text
+-- Here be syntax highlighting magic
+       
 -- -----------------------------------------------------------------------------
 -- Input processing
 -- -----------------------------------------------------------------------------
