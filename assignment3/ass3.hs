@@ -19,12 +19,13 @@ initalState = (0,[])
 nrCols = 150
 nrRows = 50
 
-
 -- footer text (make sure it's shorter than nrCols)
 footer = "[ESC+o] Open file\t" ++  -- Note: We do not use CTRL+, as those key combinations are appearently caught by the terminal
         "[ESC+s] Save file\t" ++
         "[ESC+n] New file\t"
-   
+
+ofPrompt = "Tell me which file you want to edit: "
+whoops = "Whoops, something went wrong: "
 -- -----------------------------------------------------------------------------
 -- main
 -- -----------------------------------------------------------------------------
@@ -134,11 +135,12 @@ processInput c =  insertChar c  -- any other character is simply added to our te
 -- Assumes the character read before c was ESC and thus processes the following characters as escape codes.
 esc :: Char -> StateT EditorState IO ()
 esc '[' = (lift readNext) >>= escSqBracket 
-esc 'o' = lift savelyOpen
+esc 'o' = (lift $ savelyOpen ofPrompt) >>= loadText --in put (0, loadedText)
+--     where 
 esc 's' = lift savelyWrite
 -- esc 'x' = do                         -- TODO
 --     resetScreen "New file"
---     editMode    
+--     echoOff    
 esc c = lift $ putStrLn ("Unexpected escape char: " ++ (show c))
     
 -- Assumes that the characters read before c were ESC[ and processes the following character as part of the arrow key scancode.
@@ -149,14 +151,15 @@ escSqBracket 'C' = cForward
 escSqBracket 'D' = cBackward 
 escSqBracket c = lift $ putStrLn ("Unexpected escape char: " ++ (show c))
     
-
+loadText :: Text -> StateT EditorState IO ()
+loadText t = put (0,t)
 -- -----------------------------------------------------------------------------
 -- Modes:
 -- Edit mode: catch all keystrokes and process them
 -- Default mode: Let the terminal handle keystrokes (i.e., print the in the terminal)
 -- -----------------------------------------------------------------------------
-editMode = hSetEcho stdin False
-defaultMode = hSetEcho stdin True -- TODO: special characters like backspace not processed correctly
+echoOff = hSetEcho stdin False
+echoOn = hSetEcho stdin True -- TODO: special characters like backspace not processed correctly
 
     
 -- -----------------------------------------------------------------------------
@@ -180,26 +183,25 @@ resetScreen s = do
 -- -----------------------------------------------------------------------------
 -- File IO
 -- -----------------------------------------------------------------------------
-savelyOpen :: IO ()  
-savelyOpen = do
-    resetScreen "New file"
-    defaultMode
-    putStr "Tell me which file you want to edit (CTRL-C to quit): "
+savelyOpen :: String -> IO String
+savelyOpen s = do
+    echoOn
+    setCursorPosition (nrRows -4) 0
+    putStr s
+    setCursorPosition (nrRows -4) (length s)
     rf <- getLine
     result <- try (readFile rf) :: IO (Either SomeException String)
     case result of
-        Left ex  -> do
-            putStrLn $ "Whops, something went wrong: " ++ show ex
-            savelyOpen
+        Left ex -> savelyOpen $ whoops ++ show ex ++ " " ++ ofPrompt
         Right content -> do
             resetScreen rf
-            editMode
-            putStrLn $ content 
+            echoOff
+            return content
                             
 savelyWrite:: IO ()  
 savelyWrite = do 
     resetScreen "Saving file" -- TODO: Saving files needs to be handled better
-    defaultMode
+    echoOn
     putStr "Tell me where to save: "
     wf <- getLine
     result <- try (writeFile wf "foo") :: IO (Either SomeException ())
@@ -209,7 +211,7 @@ savelyWrite = do
             savelyWrite
         Right res -> do
             resetScreen "New file"
-            editMode
+            echoOff
 
 
         -- putStrLn $ "\x1b[31m" ++ "Make me red" ++ "\x1b[0m" ++ " but leave me black" --color text
