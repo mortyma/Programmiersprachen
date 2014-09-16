@@ -81,6 +81,8 @@ removeAt (-1) xs = xs
 removeAt i xs | i >= (length xs) = xs
               | otherwise = let (ys,zs) = splitAt i xs in ys++(tail zs)
 
+tabKey :: StateT EditorState IO ()
+tabKey = state $ \(p,xs) -> ((), (p+4 , let (ys,zs) = splitAt p xs in ys++"    "++zs))
 -- -----------------------------------------------------------------------------
 -- Changing cursor position
 -- -----------------------------------------------------------------------------
@@ -150,6 +152,7 @@ processInput :: Char -> StateT EditorState IO ()
 processInput '\x1b' = (lift readNext) >>= esc  -- matched escape character; read (next part of) escape character code and process it
 processInput '\x7f' =  backspace -- backspace
 processInput '\x7e' = deleteKey -- delete
+processInput '\x09' = tabKey -- tab
 -- processInput c = do {lift $ putStrLn (show (ord c)); (lift readNext) >>= esc} -- A helper to find out keycodes
 processInput c = insertChar c  -- any other character is simply added to our text buffer
 
