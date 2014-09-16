@@ -15,11 +15,11 @@
 module LanTokenizer where
 
 type TValue = String
-data TType =  BlockStart | BlockEnd | StringStart | StringEnd | SubString | Variable | OpenVariable | ProcDelim | GuardDelim | Assign | Equals | NotEquals | Name | CommandEnd deriving (Eq,Show)
+data TType =  ErrorToken Token | ReservedToken | UnknownToken | WhiteSpace | BlockStart | BlockEnd | StringStart | StringEnd | SubString | Variable | OpenVariable | ProcDelim | GuardDelim | Assign | Equals | NotEquals | Name | CommandEnd deriving (Eq,Show)
 data Token = Token TType TValue deriving (Eq,Show)
 
 
--- | TODO: whitespaces, so i can rebuild the text...
+-- | splits a string into a list of tokens
 tokenize :: String -> [Token]
 tokenize "" = []
 tokenize (x:xs)
@@ -33,7 +33,8 @@ tokenize (x:xs)
   | x == '}' = (Token BlockEnd "}") : tokenize xs
   | x == '"' = let p = tokenizeSubString xs "" [] in (Token StringStart "\"") : (snd p) ++ tokenize (fst p)
   | x >= 'a' && x <= 'z' || x >= 'A' && x <= 'Z' = let p = tokenizeName xs [x] in (snd p) : tokenize (fst p)
-  | otherwise = tokenize xs -- ^ for now ignore whatever is unknown
+  | x == ' ' || x == '\t' || x == '\n' = let p = tokenizeWhiteSpace xs [x] in (snd p) : tokenize (fst p)
+  | otherwise = let p = tokenizeUnknown xs [x] in (snd p) : tokenize (fst p)
 
 -- | takes input string, substring buffer, string tokens and returns (remaining string, [found tokens])
 tokenizeSubString :: String -> String -> [Token] -> (String, [Token])
@@ -56,5 +57,16 @@ tokenizeName :: String -> String -> (String, Token)
 tokenizeName "" b = ("", Token Name b)
 tokenizeName (x:xs) b
   | x >= 'a' && x <= 'z' || x >= 'A' && x <= 'Z' || x >= '0' && x <= '9' = tokenizeName xs (b ++ [x])
-  | otherwise = ((x:xs), Token Name b)
+  | otherwise = (x:xs, Token Name b)
 
+tokenizeWhiteSpace :: String -> String -> (String, Token)
+tokenizeWhiteSpace "" b = ("", Token WhiteSpace b);
+tokenizeWhiteSpace (x:xs) b
+  | x == ' ' || x == '\t' || x == '\n' = tokenizeWhiteSpace xs (b ++ [x])
+  | otherwise = (x:xs, Token WhiteSpace b)
+
+tokenizeUnknown :: String -> String -> (String, Token)
+tokenizeUnknown "" b = ("", Token UnknownToken b);
+tokenizeUnknown (x:xs) b
+  | x == ' ' || x == '\t' || x == '\n' = (x:xs, Token UnknownToken b)
+  | otherwise = tokenizeUnknown xs (b ++ [x])

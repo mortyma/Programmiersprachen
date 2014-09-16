@@ -45,13 +45,22 @@ testTokenize = TestLabel "test for tokenizer" $ TestList [
    TestCase $ assertEqual "assign ="
       ([Token Assign "="])
       (tokenize "="),
+   TestCase $ assertEqual "some unknown token x = &&"
+      ([Token Name "x", Token WhiteSpace " ", Token Assign "=", Token WhiteSpace " ", Token UnknownToken "&&"])
+      (tokenize "x = &&"),
+   TestCase $ assertEqual "mixed line a b =   \"foo\""
+      ([Token Name "a", Token WhiteSpace " ", Token Name "b", Token WhiteSpace " ", Token Assign "=",
+        Token WhiteSpace "   ", Token StringStart "\"", Token SubString "foo", Token StringEnd "\""])
+      (tokenize "a b =   \"foo\""),
    TestCase $ assertEqual "short prog (maxnum)"
-      ([Token Name "maxnum", Token Name "a", Token Name "b", Token ProcDelim "-",
+      ([Token Name "maxnum", Token WhiteSpace " ", Token Name "a", Token WhiteSpace " ", Token Name "b",
+        Token WhiteSpace " ", Token ProcDelim "-", Token WhiteSpace " ",
         Token StringStart "\"", Token SubString "", Token Variable "$max$", Token SubString "", Token StringEnd "\"",
-        Token BlockStart "{", Token Name "ab", Token Assign "=", Token Name "exec",
+        Token WhiteSpace " ", Token BlockStart "{", Token WhiteSpace " ", Token Name "ab", Token WhiteSpace " ",
+        Token Assign "=", Token WhiteSpace " ", Token Name "exec", Token WhiteSpace " ",
         Token StringStart "\"", Token SubString "test ", Token Variable "$a$", Token SubString " ",
         Token Variable "$b$", Token SubString " -le ", Token Variable "$b$", Token SubString "",
-        Token StringEnd "\"", Token CommandEnd ";", Token BlockEnd "}"])
+        Token StringEnd "\"", Token CommandEnd ";", Token WhiteSpace " ", Token BlockEnd "}"])
       (tokenize "maxnum a b - \"$max$\" { ab = exec \"test $a$ $b$ -le $b$\"; }")
   ]
 

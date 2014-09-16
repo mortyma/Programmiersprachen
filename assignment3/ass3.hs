@@ -7,12 +7,14 @@ import System.Console.ANSI  -- http://hackage.haskell.org/package/ansi-terminal-
 import System.IO
 import System.IO.Error
 
+import LanPrettyprint
+
 -- -----------------------------------------------------------------------------
--- Constants 
+-- Constants
 -- -----------------------------------------------------------------------------
 type Text = [Char]
 type EditorState = (Int, Text) -- (Cursor pos, text)
-        
+
 -- initial state
 initialState = (0,[])
 
@@ -33,11 +35,11 @@ nf = "New file"
 -- main
 -- -----------------------------------------------------------------------------
 main :: IO ()
-main = do 
+main = do
     -- configure streams
-    hSetBuffering stdin NoBuffering 
+    hSetBuffering stdin NoBuffering
     hSetBuffering stdout NoBuffering
-    hSetEcho stdin False    
+    hSetEcho stdin False
     printFooter 0 0
     setTitle nf
     execStateT process initialState     -- run the editor
@@ -49,12 +51,12 @@ main = do
 process :: StateT EditorState IO ()
 process = do
     (lift readNext) >>= processInput        -- wait for next keystroke and process it
-    (p,text) <- get                         -- get current state of our editor  
-    lift clearScreen                  
+    (p,text) <- get                         -- get current state of our editor
+    lift clearScreen
     lift $ setCursorPosition 0 0            -- set cursor to 0,0 so that...
     lift $ putStr (highlight text)          -- ...text is printed correctly
     let cp = cursorPosition text p in do    -- calculate cursor position
-        lift $ printFooter (fst cp) (snd cp)  
+        lift $ printFooter (fst cp) (snd cp)
         lift $ setCursorPosition (fst cp) (snd cp)  -- set actual cursor position
     process
 
@@ -66,7 +68,7 @@ insertChar c = state $ \(p,xs) -> ((), (p+1 , insertAt c xs p))
 
 insertAt :: Char -> Text -> Int -> Text
 insertAt c xs p = let (ys,zs) = splitAt p xs in ys++c:zs
-   
+
 backspace ::StateT EditorState IO ()
 backspace = state $ \(p,xs) -> ((), (max 0 (p-1), removeAt (p-1) xs))
 
@@ -77,7 +79,7 @@ removeAt :: Int -> Text -> Text
 removeAt (-1) xs = xs
 removeAt i xs | i >= (length xs) = xs
               | otherwise = let (ys,zs) = splitAt i xs in ys++(tail zs)
-    
+
 -- -----------------------------------------------------------------------------
 -- Changing cursor position
 -- -----------------------------------------------------------------------------
@@ -89,7 +91,7 @@ cForward = state $ \(p,xs) -> ((), (min (p+1) (length xs), xs))
 
 cBackward :: StateT EditorState IO ()
 cBackward = state $ \(p,xs) -> ((), (max (p-1) 0, xs))
- 
+
 -- -----------------------------------------------------------------------------
 -- Calculating cursor position on screen
 -- Arguments:   String text: contains the text to display, including \n;
@@ -108,66 +110,66 @@ cBackward = state $ \(p,xs) -> ((), (max (p-1) 0, xs))
 -- -----------------------------------------------------------------------------
 cursorPosition :: Text -> Int -> (Int, Int)
 cursorPosition [] _ = (0,0)
-cursorPosition text p =     
+cursorPosition text p =
     if (p == (length text)) && (text!!(p-1) == '\n')
        then (length (lines text) + (nrLineWraps text p) , 0) -- If the last character is a newline, the else branch will give a wrong line number (because we add +1 to the length of every line)
-       else (lineNr + (nrLineWraps text p),  mod colNr nrCols )               
+       else (lineNr + (nrLineWraps text p),  mod colNr nrCols )
             where   sl = scanl (+) 0 $ map ((+1) . length) (lines text) -- find out how many characters there are in each line (+1 for newlines) and do prefix sum
                     lineNr = case findIndex (>p) sl of  -- find out in which line we are at
                         Just val -> val - 1
                         Nothing -> -1          --TODO: this can never happen
                     colNr = mod (p - sl!!(lineNr)) nrCols  -- substract nr of characters in all lines before lineNr and do mod nrCols since we wrap long lines)
 
--- Count number of line wraps that occur in the text up until the given position                 
+-- Count number of line wraps that occur in the text up until the given position
 -- In other words: find lines longer than nrCols (up to given position p in text) and then calculate how often they will wrap
 nrLineWraps :: Text -> Int -> Int
 nrLineWraps text p = sum wrapCnt
-    where 
+    where
         t = lines (take p text)                 -- lines up until position p
-        ll = filter ((>=nrCols) . length) t     -- long lines 
+        ll = filter ((>=nrCols) . length) t     -- long lines
         lll = map length ll                     -- length of the long lines
         wrapCnt = map (\x -> div x nrCols) lll           -- how often they will wrap
-       
+
 -- -----------------------------------------------------------------------------
 -- Syntax highlighting
 -- -----------------------------------------------------------------------------
 highlight:: String -> String
-highlight s = s  -- TODO: This is a dummy implementation. Highlight portions of text by inserting color codes like this:
+highlight s = pretty s  -- TODO: This is a dummy implementation. Highlight portions of text by inserting color codes like this:
 -- "\x1b[31m" ++ "Make me red" ++ "\x1b[0m" ++ " but leave me black" --color text
 -- Here be syntax highlighting magic
-       
+
 -- -----------------------------------------------------------------------------
 -- Input processing
 -- -----------------------------------------------------------------------------
 -- read the next character from keyboard
 readNext :: IO Char
 readNext = getChar
-    
+
 processInput :: Char -> StateT EditorState IO ()
 processInput '\x1b' = (lift readNext) >>= esc  -- matched escape character; read (next part of) escape character code and process it
 processInput '\x7f' =  backspace -- backspace
 processInput '\x7e' = deleteKey -- delete
--- processInput c = do {lift $ putStrLn (show (ord c)); (lift readNext) >>= esc} -- A helper to find out keycodes 
+-- processInput c = do {lift $ putStrLn (show (ord c)); (lift readNext) >>= esc} -- A helper to find out keycodes
 processInput c = insertChar c  -- any other character is simply added to our text buffer
-    
+
 -- Assumes the character read before c was ESC and thus processes the following characters as escape codes.
 esc :: Char -> StateT EditorState IO ()
-esc '[' = (lift readNext) >>= escSqBracket 
+esc '[' = (lift readNext) >>= escSqBracket
 esc 'o' = (lift $ savelyOpen ofPrompt) >>= loadText --in put (0, loadedText)
 esc 's' = get >>= saveText
 esc 'n' = do
     put initialState
     lift $ setTitle nf
 esc c = return () -- ignore
-    
+
 -- Assumes that the characters read before c were ESC[ and processes the following character as part of the arrow key scancode.
 escSqBracket :: Char -> StateT EditorState IO ()
 escSqBracket 'A' = lift $ cursorUpLine 1 -- TODO
 escSqBracket 'B' = lift $ cursorDownLine 1 -- TODO
-escSqBracket 'C' = cForward 
-escSqBracket 'D' = cBackward 
+escSqBracket 'C' = cForward
+escSqBracket 'D' = cBackward
 escSqBracket c = return () -- ignore
-    
+
 loadText :: Text -> StateT EditorState IO ()
 loadText t = put (0,t)
 
@@ -181,26 +183,26 @@ saveText (p,t) = lift $ savelyWrite t sfPrompt
 echoOff = hSetEcho stdin False
 echoOn = hSetEcho stdin True
 
-    
+
 -- -----------------------------------------------------------------------------
 -- Screen manipulation
 -- -----------------------------------------------------------------------------
 -- Print the footer
 printFooter :: Int -> Int -> IO ()
-printFooter r c = do 
+printFooter r c = do
     setCursorPosition (nrRows - 3) 0
     putStrLn $ replicate nrCols '-'
-    putStr ("  " ++ show r ++ ":" ++ show c ++ "\t\t") 
+    putStr ("  " ++ show r ++ ":" ++ show c ++ "\t\t")
     putStrLn footer
     putStr $ replicate nrCols '-'
-    
+
 statusLine :: String -> IO ()
 statusLine s = do
     echoOn
     setCursorPosition (nrRows -4) 0
     putStr s
     setCursorPosition (nrRows -4) (length s)
-    
+
 -- -----------------------------------------------------------------------------
 -- File IO
 -- -----------------------------------------------------------------------------
@@ -215,10 +217,10 @@ savelyOpen s = do
             setTitle rf
             echoOff
             return t
-                            
-savelyWrite:: Text -> String -> IO ()  
-savelyWrite t s = do 
-    statusLine s    
+
+savelyWrite:: Text -> String -> IO ()
+savelyWrite t s = do
+    statusLine s
     wf <- getLine
     result <- try (writeFile wf t) :: IO (Either SomeException ())
     case result of
