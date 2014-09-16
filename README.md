@@ -11,4 +11,5 @@ Requirements:
 - haskell-plattform (including an up-to-date GHC)
 - xterm
 - cabal 
-- Package ansi-terminal (cabal update && cabal install ansi-terminal)
+- Package ansi-terminal, mtl (cabal update && cabal install ansi-terminal mtl)
+
