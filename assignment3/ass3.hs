@@ -42,6 +42,7 @@ main = do
     hSetBuffering stdout NoBuffering
     hSetEcho stdin False
     printFooter 0 0
+    setCursorPosition 0 0
     setTitle nf
     execStateT process initialState     -- run the editor
     putStrLn "bye"              -- this is only here because the last statement needs to be an expression with result type IO
@@ -86,15 +87,31 @@ tabKey = state $ \(p,xs) -> ((), (p+4 , let (ys,zs) = splitAt p xs in ys++"    "
 -- -----------------------------------------------------------------------------
 -- Changing cursor position
 -- -----------------------------------------------------------------------------
-setCursor :: Int -> StateT EditorState IO ()
-setCursor x = state $ \(p,xs) -> ((), (x, xs))
+arrowRight :: StateT EditorState IO ()
+arrowRight= state $ \(p,xs) -> ((), (min (p+1) (length xs), xs))
 
-cForward :: StateT EditorState IO ()
-cForward = state $ \(p,xs) -> ((), (min (p+1) (length xs), xs))
+arrowLeft :: StateT EditorState IO ()
+arrowLeft = state $ \(p,xs) -> ((), (max (p-1) 0, xs))
 
-cBackward :: StateT EditorState IO ()
-cBackward = state $ \(p,xs) -> ((), (max (p-1) 0, xs))
+arrowUp :: StateT EditorState IO ()
+arrowUp = state $ \(p,xs) -> ((), (calcUp xs (cursorPosition xs p), xs))
+        
+calcUp :: Text -> (Int, Int) -> Int
+calcUp xs (0,c) = c
+calcUp xs (r,c) = sumLinesTo xs (r-1) + min c (length ((lines xs)!!(r-1)))
 
+sumLinesTo :: Text -> Int -> Int
+sumLinesTo xs i 
+    | i <= 0 = 0
+    | otherwise = sum $ map ((+1) . length) (take i $ lines xs)
+    
+arrowDown :: StateT EditorState IO ()
+arrowDown = state $ \(p,xs) -> ((), (calcDown xs p (cursorPosition xs p), xs))
+
+calcDown :: Text -> Int -> (Int, Int) -> Int
+calcDown xs p (r,c)
+    | r + 1 >= length (lines xs) = p  -- TODO: there is a small bug here. If last line contains only '\n' we can never reach it with the arrow down key
+    | otherwise = sumLinesTo xs (r+1) + min c (length ((lines xs)!!(r+1)))
 -- -----------------------------------------------------------------------------
 -- Calculating cursor position on screen
 -- Arguments:   String text: contains the text to display, including \n;
@@ -168,10 +185,10 @@ esc c = return () -- ignore
 
 -- Assumes that the characters read before c were ESC[ and processes the following character as part of the arrow key scancode.
 escSqBracket :: Char -> StateT EditorState IO ()
-escSqBracket 'A' = lift $ cursorUpLine 1 -- TODO
-escSqBracket 'B' = lift $ cursorDownLine 1 -- TODO
-escSqBracket 'C' = cForward
-escSqBracket 'D' = cBackward
+escSqBracket 'A' = arrowUp
+escSqBracket 'B' = arrowDown
+escSqBracket 'C' = arrowRight
+escSqBracket 'D' = arrowLeft
 escSqBracket c = return () -- ignore
 
 loadText :: Text -> StateT EditorState IO ()
