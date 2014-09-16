@@ -75,7 +75,7 @@ testTokenizeVariable = TestLabel "test for variable tokenizer" $ TestList [
       ("foo", Token Variable "$x$")
       (tokenizeVariable "x$foo" ""),
     TestCase $ assertEqual "open var"
-      (" 123", Token OpenVariable "$xy")
+      ("\" 123", Token OpenVariable "$xy")
       (tokenizeVariable "xy\" 123" "")
   ]
 
