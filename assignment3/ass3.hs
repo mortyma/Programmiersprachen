@@ -25,7 +25,8 @@ nrRows = 50
 -- footer text (make sure it's shorter than nrCols)
 footer = "[ESC+o] Open file\t" ++  -- Note: We do not use CTRL+, as those key combinations are appearently caught by the terminal
         "[ESC+s] Save file\t" ++
-        "[ESC+n] New file\t"
+        "[ESC+n] New file\t" ++
+        "[CTRL+c] Exit\t"
 
 ofPrompt = "Tell me which file you want to edit: "
 sfPrompt = "Tell me where to save: "
