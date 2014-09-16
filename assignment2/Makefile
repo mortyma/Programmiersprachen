@@ -1,0 +1,2 @@
+run: 
+	./sorter.coord

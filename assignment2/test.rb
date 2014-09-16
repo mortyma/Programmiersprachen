@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 require_relative 'parser'
 require 'pp'
 
