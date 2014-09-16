@@ -94,11 +94,13 @@ arrowLeft :: StateT EditorState IO ()
 arrowLeft = state $ \(p,xs) -> ((), (max (p-1) 0, xs))
 
 arrowUp :: StateT EditorState IO ()
-arrowUp = state $ \(p,xs) -> ((), (calcUp xs (cursorPosition xs p), xs))
+arrowUp = state $ \(p,xs) -> ((), (calcUp xs p (cursorPosition xs p), xs))
         
-calcUp :: Text -> (Int, Int) -> Int
-calcUp xs (0,c) = c
-calcUp xs (r,c) = sumLinesTo xs (r-1) + min c (length ((lines xs)!!(r-1)))
+calcUp :: Text -> Int -> (Int, Int) -> Int
+calcUp xs p (0,c) = c
+calcUp xs p (r,c) 
+    | c > nrCols = p - nrCols
+    | otherwise = sumLinesTo xs (r-1) + min c (length ((lines xs)!!(r-1)))
 
 sumLinesTo :: Text -> Int -> Int
 sumLinesTo xs i 
@@ -110,6 +112,7 @@ arrowDown = state $ \(p,xs) -> ((), (calcDown xs p (cursorPosition xs p), xs))
 
 calcDown :: Text -> Int -> (Int, Int) -> Int
 calcDown xs p (r,c)
+    | r < length (lines xs) && length ((lines xs)!!r) >= c + nrCols = p + nrCols
     | r + 1 >= length (lines xs) = p  -- TODO: there is a small bug here. If last line contains only '\n' we can never reach it with the arrow down key
     | otherwise = sumLinesTo xs (r+1) + min c (length ((lines xs)!!(r+1)))
 -- -----------------------------------------------------------------------------
