@@ -14,6 +14,8 @@
 
 module LanTokenizer where
 
+import Data.Char
+
 type TValue = String
 data TType =  ErrorToken Token | ReservedToken | UnknownToken | WhiteSpace | BlockStart | BlockEnd | StringStart | StringEnd | SubString | Variable | OpenVariable | ProcDelim | GuardDelim | Assign | Equals | NotEquals | Name | CommandEnd deriving (Eq,Show)
 data Token = Token TType TValue deriving (Eq,Show)
@@ -32,7 +34,7 @@ tokenize (x:xs)
   | x == '{' = (Token BlockStart "{") : tokenize xs
   | x == '}' = (Token BlockEnd "}") : tokenize xs
   | x == '"' = let p = tokenizeSubString xs "" [] in (Token StringStart "\"") : (snd p) ++ tokenize (fst p)
-  | x >= 'a' && x <= 'z' || x >= 'A' && x <= 'Z' = let p = tokenizeName xs [x] in (snd p) : tokenize (fst p)
+  | isAlphaNum x = let p = tokenizeName xs [x] in (snd p) : tokenize (fst p)
   | x == ' ' || x == '\t' || x == '\n' = let p = tokenizeWhiteSpace xs [x] in (snd p) : tokenize (fst p)
   | otherwise = let p = tokenizeUnknown xs [x] in (snd p) : tokenize (fst p)
 
@@ -42,6 +44,7 @@ tokenizeSubString "" b t = ("", t ++ [Token SubString b])
 tokenizeSubString (x:xs) b t
   | x == '"' = (xs, t ++ [Token SubString b, Token StringEnd "\""] )
   | x == '$' = let v = tokenizeVariable xs "" in tokenizeSubString (fst v) "" (t ++ [Token SubString b] ++ [snd v])
+  | x == '\\' && length xs > 0 && (head xs == '$' || head xs == '"') = tokenizeSubString (tail xs) (b ++ [x, head xs]) t
   | otherwise = tokenizeSubString xs (b ++ [x]) t
 
 -- | takes input string, var name buffer and returns (remaining string, found token)
@@ -50,13 +53,14 @@ tokenizeVariable "" b = ("", Token OpenVariable ("$" ++b))
 tokenizeVariable (x:xs) b
   | x == '$' = (xs, Token Variable ("$" ++ b ++ "$"))
   | x == '"' = (xs, Token OpenVariable ("$" ++ b))
+--  | x == '\\' && length xs > 0 && (head xs == '$' || head xs == '"') = tokenizeVariable (tail xs) (b ++ [x, head xs])
   | otherwise = tokenizeVariable xs (b ++ [x])
 
 -- | takes input string, name buffer and returns (remaining string, found token)
 tokenizeName :: String -> String -> (String, Token)
 tokenizeName "" b = ("", Token Name b)
 tokenizeName (x:xs) b
-  | x >= 'a' && x <= 'z' || x >= 'A' && x <= 'Z' || x >= '0' && x <= '9' = tokenizeName xs (b ++ [x])
+  | isAlphaNum x = tokenizeName xs (b ++ [x])
   | otherwise = (x:xs, Token Name b)
 
 tokenizeWhiteSpace :: String -> String -> (String, Token)
