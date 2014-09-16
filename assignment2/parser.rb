@@ -3,8 +3,10 @@ require 'parslet'
 require_relative 'language'
 
 class GCParser < Parslet::Parser
-  rule(:space?)     { match('\s').repeat(1) }
-  rule(:space?)     { match('\s').repeat }
+  # rule(:space?)     { match('\s').repeat(1) }
+  rule(:comment)     { str('#') >> match['^\n'].repeat }
+
+  rule(:space?)     { (match('\s')|comment).repeat }
   rule(:identifier) {match['a-zA-Z0-9'].repeat(1)}
 
 
@@ -31,7 +33,9 @@ class GCParser < Parslet::Parser
     name.as(:isbound)
 
   }
-  rule(:string) {str('"') >> (variable|(str('\"')|match['^"$']).repeat(1).as(:content)).repeat.as(:string) >> str('"') >> space?}
+  rule(:string) { str('"') >>(variable|((str('\\')>>any)|match['^"$\\\\']).repeat(1).as(:content)
+    ).repeat.as(:string) >> str('"') >> space?
+  }
   rule(:variable) {str('$') >> identifier.as(:name) >> str('$')}
   rule(:name) { identifier.as(:name) >> space? }
   root :program
@@ -63,6 +67,7 @@ class GCAst < Parslet::Transform
   rule(:fst => simple(:fst), :snd => simple(:snd), :delim => simple(:delim), :str=>simple(:str)) {
     BlockCommand.new([fst,snd],[delim, str]){|delim,str|
       a, b = str.split(delim,2)
+      a ||= ""
       b ||= ""
       [a, b]
     }

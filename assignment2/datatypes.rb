@@ -24,7 +24,10 @@ class Str
 
   def self.unescape(x)
     return x unless x.is_a?(String)
-    x.gsub('\"','"')
+    x
+    .gsub('\"','"')
+    .gsub('\n',"\n")
+    .gsub('\$',"$")
   end
 
   def to_s
