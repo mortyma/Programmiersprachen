@@ -8,6 +8,6 @@ bake: ass3.hs
 	ghc -o ass3 ass3.hs src/LanTokenizer.hs src/LanPrettyprint.hs -XDataKinds
 
 run: bake
-	xterm ./ass3 -geometry 150x50
+	xterm ./ass3 -geometry 150x54
 clean:
 	rm ass3 *.o *.hi -f

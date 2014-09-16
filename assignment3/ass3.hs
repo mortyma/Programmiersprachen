@@ -20,8 +20,7 @@ initialState = (0,[])
 
 -- Size of the xterm window our editor runs in. Assumed to be constant (i.e., don't change the window size of the xterm or things will get really weird)
 nrCols = 150
-nrRows = 50
-
+nrRows = 54 - 4
 -- footer text (make sure it's shorter than nrCols)
 footer = "[ESC+o] Open file\t" ++  -- Note: We do not use CTRL+, as those key combinations are appearently caught by the terminal
         "[ESC+s] Save file\t" ++
@@ -55,11 +54,12 @@ process = do
     (lift readNext) >>= processInput        -- wait for next keystroke and process it
     (p,text) <- get                         -- get current state of our editor
     lift clearScreen
-    lift $ setCursorPosition 0 0            -- set cursor to 0,0 so that...
-    lift $ putStr (highlight text)          -- ...text is printed correctly
-    let cp = cursorPosition text p in do    -- calculate cursor position
-        lift $ printFooter (fst cp) (snd cp)
-        lift $ setCursorPosition (fst cp) (snd cp)  -- set actual cursor position
+    let cp = cursorPosition text p in       -- calculate cursor position
+        do   
+            lift $ setCursorPosition 0 0            -- set cursor to 0,0 so that...
+            lift $ putStr (textToShow (fst cp) text)         -- ...text is printed correctly
+            lift $ printFooter (fst cp) (snd cp)
+            lift $ setCursorPosition (mod (fst cp) nrRows) (snd cp)  -- set actual cursor position
     process
 
 -- -----------------------------------------------------------------------------
@@ -158,6 +158,11 @@ highlight s = pretty s  -- TODO: This is a dummy implementation. Highlight porti
 -- "\x1b[31m" ++ "Make me red" ++ "\x1b[0m" ++ " but leave me black" --color text
 -- Here be syntax highlighting magic
 
+textToShow:: Int -> String -> String
+textToShow c xs = unlines $ take nrRows xs1
+    where 
+        xs1 = drop (nrRows * (div c nrRows)) xsp
+        xsp = lines $ pretty xs
 -- -----------------------------------------------------------------------------
 -- Input processing
 -- -----------------------------------------------------------------------------
@@ -211,7 +216,7 @@ echoOn = hSetEcho stdin True
 -- Print the footer
 printFooter :: Int -> Int -> IO ()
 printFooter r c = do
-    setCursorPosition (nrRows - 3) 0
+    setCursorPosition (nrRows + 1) 0
     putStrLn $ replicate nrCols '-'
     putStr ("  " ++ show r ++ ":" ++ show c ++ "\t\t")
     putStrLn footer
@@ -220,9 +225,9 @@ printFooter r c = do
 statusLine :: String -> IO ()
 statusLine s = do
     echoOn
-    setCursorPosition (nrRows -4) 0
+    setCursorPosition nrRows 0
     putStr s
-    setCursorPosition (nrRows -4) (length s)
+    setCursorPosition nrRows (length s)
 
 -- -----------------------------------------------------------------------------
 -- File IO
