@@ -17,7 +17,7 @@ module LanTokenizer where
 import Data.Char
 
 type TValue = String
-data TType =  ProcName | ProcVar | ErrorToken Token | ReservedToken | UnknownToken | WhiteSpace
+data TType =  TToken [Token] | ProcName | ProcVar | ErrorToken Token | ReservedToken | UnknownToken | WhiteSpace
   | BlockStart | BlockEnd | StringStart | StringEnd | SubString | String [Token] | OpenString [Token]
   | Variable | OpenVariable
   | ProcDelim | GuardDelim | Assign | Equals | NotEquals | Name | CommandEnd deriving (Eq,Show)
@@ -77,3 +77,6 @@ tokenizeUnknown "" b = ("", Token UnknownToken b);
 tokenizeUnknown (x:xs) b
   | x == ' ' || x == '\t' || x == '\n' = (x:xs, Token UnknownToken b)
   | otherwise = tokenizeUnknown xs (b ++ [x])
+
+
+

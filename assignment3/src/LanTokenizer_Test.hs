@@ -22,6 +22,7 @@ import Test.Framework.Providers.HUnit
 
 import Test.HUnit
 import LanTokenizer
+import LanPrettyprint
 
 testTokenize = TestLabel "test for tokenizer" $ TestList [
     TestCase $ assertEqual "empty input"
