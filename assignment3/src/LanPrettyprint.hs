@@ -69,18 +69,19 @@ parse (x:xs) = x : parse xs
 -- | input: if min one was found: expect a name token, else mark it as error and try again, continue with input vars
 parseProc :: [Token] -> [Token]
 parseProc [] = []
-parseProc ((Token Name v):xs) = (Token ProcName v) : parseProcIn xs False
-parseProc ((Token t v):xs) = (Token (ErrorToken (Token t v)) v) : parseProc xs
+parseProc ((Token Name v):xs)             = (Token ProcName v) : parseProcIn xs
+-- parseProc ((Token ProcDelim v):xs)        = (Token ProcDelim v) : parseProcOut xs False -- next step
+parseProc (x:xs)                          = (Token (ErrorToken x) "unexpected token") : parseProc xs
 
 
 --TODO: verwendung prüfen
--- | input, found-flag: expect one or more names, else continue with delimiter
-parseProcIn :: [Token] -> Bool -> [Token]
-parseProcIn [] _                          = []
-parseProcIn ((Token WhiteSpace v):xs) b   = (Token WhiteSpace v) : parseProcIn xs b -- continue
-parseProcIn ((Token Name v):xs) _         = (Token ProcVar v) : parseProcIn xs True -- continue
-parseProcIn ((Token ProcDelim v):xs) True = (Token ProcDelim v) : parseProcOut xs False -- next step
-parseProcIn (x:xs) b                      = (Token (ErrorToken x) "name expected") : parseProcIn xs b -- failure and continue
+-- | input, found-flag: possible many names, else continue with delimiter
+parseProcIn :: [Token] -> [Token]
+parseProcIn []                           = []
+parseProcIn ((Token WhiteSpace v):xs)    = (Token WhiteSpace v) : parseProcIn xs  -- continue
+parseProcIn ((Token Name v):xs)          = (Token ProcVar v) : parseProcIn xs  -- continue
+parseProcIn ((Token ProcDelim v):xs)     = (Token ProcDelim v) : parseProcOut xs False -- next step
+parseProcIn (x:xs)                       = (Token (ErrorToken x) "name expected") : parseProcIn xs  -- failure and continue
 
 
 --TODO: verwendung prüfen
