@@ -1,0 +1,3 @@
+
+run: 
+	python runCalc.py
