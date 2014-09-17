@@ -26,5 +26,5 @@ All assignments contain a makefile for easily building and running them.
 - haskell-plattform (including an up-to-date GHC)
 - xterm
 - cabal 
-- Package ansi-terminal, mtl (cabal update && cabal install ansi-terminal mtl)
+- Package ansi-terminal, mtl, containers (cabal update && cabal install ansi-terminal mtl containers)
 

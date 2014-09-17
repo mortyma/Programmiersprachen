@@ -14,6 +14,7 @@
 
 module LanPrettyprint where
 
+import qualified Data.Map as Map
 import LanTokenizer
 
 colorReset      = "\x1b[0m"
@@ -23,12 +24,13 @@ colorInVar      = "\x1b[35;1m"
 colorBlock      = "\x1b[38;5;150m"
 colorUnfinished = "\x1b[4m"
 colorError      = "\x1b[41m"
+colorUnused     = "\x1b[43m"
 colorReserved   = "\x1b[34m"
 colorString     = "\x1b[32m"
 
 
 pretty :: String -> String
-pretty x = foldl (\e f -> e ++ prettyToken f) [] $ parseProc $ tokenize x
+pretty x = foldl (\e f -> e ++ prettyToken f) [] $ let t = parseProc $ tokenize x in markToken t "" (findToken2 t "" (findToken t "" Map.empty))
 
 
 -- | prettify tokens
@@ -36,6 +38,7 @@ prettyToken :: Token -> String
 prettyToken (Token UnknownToken v) = colorError ++ v ++ colorReset
 prettyToken (Token OpenVariable v) = colorUnfinished ++ colorVar ++ v ++ colorReset
 prettyToken (Token (ErrorToken (Token _ v)) _) = colorError ++ v ++ colorReset
+-- prettyToken (Token (UnusedVar (Token _ v)) _) = colorUnused ++ v ++ colorReset -- does not work right :/
 prettyToken (Token BlockStart v) = colorBlock ++ v ++ colorReset
 prettyToken (Token BlockEnd v) = colorBlock ++ v ++ colorReset
 prettyToken (Token ReservedToken v) = colorReserved ++ v ++ colorReset
@@ -58,12 +61,70 @@ prettyTokenOpenString (Token Variable v) = colorUnfinished ++ colorInVar ++ v ++
 prettyTokenOpenString (Token _ v) = v
 
 
--- TODO: löschen wenn fertig!
-parse :: [Token] -> [Token]
-parse [] = []
-parse ((Token Name v):xs)
-  | v == "exec" || v == "split" || v == "finally" = (Token ReservedToken v) : parse xs
-parse (x:xs) = x : parse xs
+-- | prefix, name
+tokenKey :: String -> String -> String
+tokenKey p n = p ++ "%%" ++ n
+
+-- | input tokens, prefix, dict: look for variables(in strings), put them in a dict
+findToken :: [Token] -> String -> Map.Map String Bool -> Map.Map String Bool
+findToken [] _ d = d
+findToken ((Token Variable v):xs) p d = findToken ((Token OpenVariable ("**" ++ tokenKey p (init (tail v)) ++ "**")):    xs) p (Map.insert (tokenKey p (init (tail v))) False d)
+findToken ((Token (String l) _ ):xs) p d = findToken xs p (findToken l p d)
+findToken ((Token ProcName v):xs) p d = findToken xs v d
+findToken ((Token BlockEnd v):xs) p d = findToken xs "" d
+findToken (x:xs) p d = findToken xs p d
+
+
+-- | input tokens, prefix, dict: look for names or procvars and mark the dict entry true if the names are in it
+findToken2 :: [Token] -> String -> Map.Map String Bool -> Map.Map String Bool
+findToken2 [] _ d = d
+findToken2 ((Token (String l) _ ):xs) p d = findToken2 xs p (findToken2 l p d)
+findToken2 ((Token Name v):xs) p d = let b = Map.lookup (tokenKey p v) d in
+  case b of
+  Nothing -> findToken2 xs p d -- ignore (cant mark :( )
+  Just x ->
+    if x == False
+    then findToken2 xs p (Map.insert (tokenKey p v) True d) -- mark true
+    else findToken2 xs p d
+findToken2 ((Token ProcVar v):xs) p d = let b = Map.lookup (tokenKey p v) d in
+  case b of
+  Nothing -> findToken2 xs p d -- ignore (cant mark :( )
+  Just x ->
+    if x == False
+    then findToken2 xs p (Map.insert (tokenKey p v) True d) -- mark true
+    else findToken2 xs p d
+findToken2 ((Token ProcName v):xs) p d = let b = Map.lookup (tokenKey p v) d in
+  case b of
+  Nothing -> findToken2 xs p d -- ignore (cant mark :( )
+  Just x ->
+    if x == False
+    then findToken2 xs p (Map.insert (tokenKey p v) True d) -- mark true
+    else findToken2 xs p d
+findToken2 ((Token ProcName v):xs) p d = findToken2 xs v d
+findToken2 ((Token BlockEnd v):xs) p d = findToken2 xs "" d
+findToken2 (x:xs) p d = findToken2 xs p d
+
+
+-- | mark bound
+markToken :: [Token] -> String -> Map.Map String Bool -> [Token]
+markToken [] _ _ = []
+markToken ((Token Name v):xs) p d = let b = Map.lookup (tokenKey p v) d in
+  case b of
+  Nothing -> (Token (ErrorToken (Token Name v)) "unused var"):markToken xs p d -- mark unused
+  Just x ->
+    if x == False
+    then (Token (UnusedVar (Token Name v)) "undefined var"):markToken xs p (Map.insert (p ++ v) False d) -- not nice....
+    else (Token Name v):markToken xs p d
+markToken ((Token ProcVar v):xs) p d = let b = Map.lookup (tokenKey p v) d in
+  case b of
+  Nothing -> (Token (ErrorToken (Token ProcVar v)) "unused var"):markToken xs p d -- mark unused
+  Just x ->
+    if x == False
+    then (Token (UnusedVar (Token ProcVar v)) "undefined var"):markToken xs p (Map.insert (p ++ v) False d) -- not nice....
+    else (Token ProcVar v):markToken xs p d
+markToken ((Token ProcName v):xs) p d = (Token ProcName v):markToken xs v d
+markToken ((Token BlockEnd v):xs) p d = (Token BlockEnd v):markToken xs "" d
+markToken (x:xs) p d = x:markToken xs p d
 
 
 -- | input: if min one was found: expect a name token, else mark it as error and try again, continue with input vars

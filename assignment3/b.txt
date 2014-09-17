@@ -1,0 +1,79 @@
+BEGIN - "$done$" {
+e files = exec "find .";
+done = ProcessFiles "$files$";
+}
+Copy path dir - "$exit$" "$out$" {
+exit = exec "cp $path$ $dir$";
+exit == "0": out = "copied $path$ to $dir$\n";
+exit != "0": out = "failed to copy $path$ to $dir$\n";
+}
+Mkdir dir - "$exit$" "$out$" {
+exists = exec "test -d $dir$";
+exists == "0" : exit = "0";
+exists == "0" : out = "";
+exists != "0" : exit = exec "mkdir -p $dir$";
+exit == "0" : out = "created directory $dir$\n";
+exit != "0" : out = "failed to create directory $dir$\n";
+}
+DirForFile file - "./$ext$/$sizeDir$" {
+ext = Extension "$file$";
+size = Filesize "$file$";
+sizeBucket = FirstSmaller "100,1000,10000" "$size$";
+sizeDir = DirForSize "$sizeBucket$";
+}
+DirForSize bucket - "$dir$" {
+bucket != "" : dir = "upto$bucket$b";
+finally : dir = "big";
+}
+Filesize path - "$size$" {
+exit out = exec "ls -nl $path$ | awk '{print \$5}'";
+exit != "0" : size = "0";
+exit == "0" : size = Chomp "$out$";
+}
+Extension path - "$extension$" {
+filename = Basename "$path$";
+ext = AfterLast "." "$filename$";
+ext == "" : extension = "NONE";
+a b = split "." "$filename$";
+a == "": extension = "NONE";
+b == "": extension = "NONE";
+finally : extension = "$ext$";
+}
+AfterLast sep string - "$remainder$" {
+first rest = split "$sep$" "$string$";
+rest == "" : remainder = "$first$";
+rest != "" : remainder = AfterLast "$sep$" "$rest$";
+}
+Chomp string - "$stringUpToNewline$" {
+stringUpToNewline rest = split "\n" "$string$";
+}
+ExternalBasename path - "$ret$" {
+ignored bn = exec "basename $path$";
+ret = Chomp "$bn$";
+}
+Basename path - "$ret$" {
+ret = AfterLast "/" "$path$";
+}
+FirstSmaller list i - "$ret$" {
+list == "": ret = "";
+first rest = split "," "$list$";
+match = exec "test $i$ -le $first$";
+match == "0": ret = "$first$";
+match != "0": ret = FirstSmaller "$rest$" "$i$";
+}
+ProcessFile path - "$log$" {
+isFile = exec "test -f $path$";
+isFile != "0": log = "skipped $path$\n";
+isFile == "0": dir = DirForFile "$path$";
+dirOk dirLog = Mkdir "$dir$";
+dirOk == "0" : cpOk cpLog = Copy "$path$" "$dir$";
+dirOk != "0" : cpLog = "";
+log = "$dirLog$$cpLog$";
+}
+ProcessFiles files - "$log$" {
+files == "" : log = "";
+files != "" : first rest = split "\n" "$files$";
+f = ProcessFile "$first$";
+r = ProcessFiles "$rest$";
+log = "$f$$r$";
+}

@@ -19,7 +19,7 @@ import Data.Char
 type TValue = String
 data TType =  TToken [Token] | ProcName | ProcVar | ErrorToken Token | ReservedToken | UnknownToken | WhiteSpace
   | BlockStart | BlockEnd | StringStart | StringEnd | SubString | String [Token] | OpenString [Token]
-  | Variable | OpenVariable
+  | Variable | OpenVariable | UnusedVar Token
   | ProcDelim | GuardDelim | Assign | Equals | NotEquals | Name | CommandEnd deriving (Eq,Show)
 data Token = Token TType TValue deriving (Eq,Show)
 
@@ -54,7 +54,7 @@ tokenizeSubString (x:xs) b t
 tokenizeVariable :: String -> String -> (String, Token)
 tokenizeVariable "" b = ("", Token OpenVariable ("$" ++b))
 tokenizeVariable (x:xs) b
-  | x == '$' = (xs, Token Variable ("$" ++ b ++ "$"))
+  | x == '$' = (xs, Token Variable ('$' : b ++ "$"))
   | x == '"' = (x:xs, Token OpenVariable ("$" ++ b))
 --  | x == '\\' && length xs > 0 && (head xs == '$' || head xs == '"') = tokenizeVariable (tail xs) (b ++ [x, head xs])
   | otherwise = tokenizeVariable xs (b ++ [x])

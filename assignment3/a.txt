@@ -1,0 +1,30 @@
+asdf sdf -"sdf" {finally : finally : asdf : rgdf == "sdf$f$" : sdf != "sdf" : sdff erf = exec "sdf" "sdf";}
+
+a a - "f" { name = name ; }
+a a - "f" { name = name "sdr" ; }
+a a - "f" { name = name "sdr" "sdtr" ; }
+a a - "f" { name name = name "sdr" "sdtr" ; }
+a a - "f" { name name name = name  "sdtr" ; }
+a a - "f" { name name name name = name  "sdtr" ; }
+a a - "f" { name name name name = name "sdr" "sdtr" ; }
+a a - "f" { name name name name = name ; }
+
+ex ex - "ds" {
+  name = exec "str";
+  name = exec "str" "str";
+  name = exec "str" "str";
+  name name = exec "str";
+  name name = exec "str" "str";
+  name name = exec "str" "str";
+}
+
+sp sp - "ds" {
+  name name = split "str" "sdf$df$";
+}
+
+str str - "ds" {
+  name = "str" ;
+  name = "str" "sdf$df$";
+  name = "str" "asd af ag\" §" "sdf$df$";
+}
+
