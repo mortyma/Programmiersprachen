@@ -149,8 +149,9 @@ parseGuardOrCommand :: [Token] -> [Token]
 parseGuardOrCommand []                          = []
 parseGuardOrCommand ((Token WhiteSpace v):xs)   = (Token WhiteSpace v):parseGuardOrCommand xs
 parseGuardOrCommand ((Token Name v):xs)
-  | v == "finally"                              = (Token ReservedToken v):parseGuardOrCommand2 xs -- check guarddelim
+  | v == "finally"                              = (Token ReservedToken v):parseGuardDelim xs -- check guarddelim
   | otherwise                                   = (Token Name v):parseGuardOrCommand2 xs -- check compare
+parseGuardOrCommand ((Token BlockEnd v):xs)     = (Token BlockEnd v):parseProc xs
 parseGuardOrCommand (x:xs)                      = (Token (ErrorToken x) "unknown token") : parseGuardOrCommand xs
 
 
@@ -174,27 +175,28 @@ parseGuardEq (x:xs)                             = (Token (ErrorToken x) "unknown
 
 parseGuardDelim :: [Token] -> [Token]
 parseGuardDelim []                              = []
-parseGuardDelim ((Token WhiteSpace v):xs)       = (Token WhiteSpace v):parseGuardEq xs
+parseGuardDelim ((Token WhiteSpace v):xs)       = (Token WhiteSpace v):parseGuardDelim xs
 parseGuardDelim ((Token GuardDelim v):xs)       = (Token GuardDelim v):parseGuardOrCommand xs
 parseGuardDelim (x:xs)                          = (Token (ErrorToken x) "unknown token") : parseGuardOrCommand2 xs
 
 
 
--- | exactly 1 name found
+-- | exactly 1 name found (after assign)
 parseCommandName1 :: [Token] -> [Token]
-parseCommandName1 [] = []
-parseCommandName1 ((Token WhiteSpace v):xs) = (Token WhiteSpace v):parseCommandName2 xs
-parseCommandName1 ((Token StringStart v):xs) = let t = parseString xs [(Token StringStart v)] in (fst t) : parseCommandStrings (snd t) -- parse string -- TODO: prüfen
+parseCommandName1 []                            = []
+parseCommandName1 ((Token WhiteSpace v):xs)     = (Token WhiteSpace v):parseCommandName1 xs
+parseCommandName1 ((Token StringStart v):xs)    = let t = parseString xs [(Token StringStart v)] in (fst t):parseCommandStrings (snd t) -- parse string -- TODO: prüfen
 parseCommandName1 ((Token Name v):xs)
-  | v == "exec" = (Token ReservedToken v):parseCommandExec xs 0 -- TODO: geht irgendwie nicht!
-  | otherwise = (Token Name v):parseCommandName3 xs 2
-parseCommandName1 (x:xs)                          = (Token (ErrorToken x) "unknown token") : parseCommandName1 xs
+  | v == "exec"                                 = (Token ReservedToken v):parseCommandExec xs 0
+  | otherwise                                   = (Token Name v):parseCommandName3 xs 2
+parseCommandName1 (x:xs)                        = (Token (ErrorToken x) "unknown token") : parseCommandName1 xs
 
 parseCommandStrings :: [Token] -> [Token]
-parseCommandStrings [] = []
-parseCommandStrings ((Token WhiteSpace v):xs) = (Token WhiteSpace v):parseCommandName2 xs
-parseCommandStrings ((Token StringStart v):xs) = let t = parseString xs [(Token StringStart v)] in (fst t) : parseCommandStrings (snd t) -- parse string -- TODO: prüfen
-parseCommandStrings (x:xs)                          = (Token (ErrorToken x) "unknown token") : parseCommandStrings xs
+parseCommandStrings []                          = []
+parseCommandStrings ((Token WhiteSpace v):xs)   = (Token WhiteSpace v):parseCommandStrings xs
+parseCommandStrings ((Token StringStart v):xs)  = let t = parseString xs [(Token StringStart v)] in (fst t):parseCommandStrings (snd t) -- parse string -- TODO: prüfen
+parseCommandStrings ((Token CommandEnd v):xs)      = (Token CommandEnd v):parseGuardOrCommand xs
+parseCommandStrings (x:xs)                      = (Token (ErrorToken x) "unknown token") : parseCommandStrings xs
 
 
 -- | 2 names found
@@ -206,46 +208,46 @@ parseCommandName2 ((Token Assign v):xs)  = (Token Assign v):parseCommandName2P x
 parseCommandName2 (x:xs)                          = (Token (ErrorToken x) "unknown token") : parseCommandName2 xs
 
 
--- | exactly 2 names
+-- | exactly 2 names (after assign)
 parseCommandName2P :: [Token] -> [Token]
 parseCommandName2P [] = []
 parseCommandName2P ((Token WhiteSpace v):xs) = (Token WhiteSpace v):parseCommandName2P xs
 parseCommandName2P ((Token Name v):xs)
   | v == "exec" = (Token ReservedToken v):parseCommandExec xs 0
   | v == "split" = (Token ReservedToken v):parseCommandSplit xs 0
-  | otherwise = (Token Name v):parseCommandName3 xs 0
+  | otherwise = (Token Name v):parseCommandName3 xs 2
 parseCommandName2P (x:xs)                          = (Token (ErrorToken x) "unknown token") : parseCommandName2P xs
 
 
 -- | stage0 = no string, stage1 = string
 parseCommandExec :: [Token] -> Int -> [Token]
 parseCommandExec [] s = []
-parseCommandExec ((Token WhiteSpace v):xs) s = (Token WhiteSpace v):parseCommandExec xs s
-parseCommandExec ((Token StringStart v):xs) s = let t = parseString xs [(Token StringStart v)] in (fst t) : parseCommandExec (snd t) 1 -- parse string
-parseCommandExec ((Token CommandEnd v):xs) 1 = (Token CommandEnd v):parseGuardOrCommand xs
-parseCommandExec (x:xs) s                         = (Token (ErrorToken x) "unknown token") : parseCommandExec xs s
+parseCommandExec ((Token WhiteSpace v):xs) s  = (Token WhiteSpace v):parseCommandExec xs s
+parseCommandExec ((Token StringStart v):xs) 0 = let t = parseString xs [(Token StringStart v)] in (fst t) : parseCommandExec (snd t) 1 -- parse string
+parseCommandExec ((Token StringStart v):xs) 1 = let t = parseString xs [(Token StringStart v)] in (fst t) : parseCommandExec (snd t) 2 -- parse string
+parseCommandExec ((Token CommandEnd v):xs) 1  = (Token CommandEnd v):parseGuardOrCommand xs
+parseCommandExec ((Token CommandEnd v):xs) 2  = (Token CommandEnd v):parseGuardOrCommand xs
+parseCommandExec (x:xs) s                     = (Token (ErrorToken x) "unknown token") : parseCommandExec xs s
 
 
 -- | stage0 = no str, stage1 = 1 str, stage2 = 2 str
 parseCommandSplit :: [Token] -> Int -> [Token]
 parseCommandSplit [] s = []
-parseCommandSplit ((Token WhiteSpace v):xs) s = (Token WhiteSpace v):parseCommandExec xs s
-parseCommandSplit ((Token StringStart v):xs) 0 = let t = parseString xs [(Token StringStart v)] in (fst t) : parseCommandExec (snd t) 1 -- parse string
-parseCommandSplit ((Token StringStart v):xs) 1 = let t = parseString xs [(Token StringStart v)] in (fst t) : parseCommandExec (snd t) 2 -- parse string
+parseCommandSplit ((Token WhiteSpace v):xs) s = (Token WhiteSpace v):parseCommandSplit xs s
+parseCommandSplit ((Token StringStart v):xs) 0 = let t = parseString xs [(Token StringStart v)] in (fst t) : parseCommandSplit (snd t) 1 -- parse string
+parseCommandSplit ((Token StringStart v):xs) 1 = let t = parseString xs [(Token StringStart v)] in (fst t) : parseCommandSplit (snd t) 2 -- parse string
 parseCommandSplit ((Token CommandEnd v):xs) 2 = (Token CommandEnd v):parseGuardOrCommand xs
 parseCommandSplit (x:xs) s                         = (Token (ErrorToken x) "unknown token") : parseCommandSplit xs s
 
 
--- | input, stage: stage0 =names, 1= assign, 2=name after, 3=strings
+-- | input, stage: stage0 =names, 1= assign, 2=name after
 parseCommandName3 :: [Token] -> Int -> [Token]
-parseCommandName3 [] s = []
+parseCommandName3 [] s                        = []
 parseCommandName3 ((Token WhiteSpace v):xs) s = (Token WhiteSpace v):parseCommandName3 xs s
-parseCommandName3 ((Token Name v):xs) 0 = (Token Name v):parseCommandName3 xs 0
-parseCommandName3 ((Token Name v):xs) 1 = (Token Name v):parseCommandName3 xs 2
-parseCommandName3 ((Token Assign v):xs) 0 = (Token Assign v):parseCommandName3 xs 1
-parseCommandName3 ((Token StringStart v):xs) s
-  | s == 2 || s == 3 = let t = parseString xs [(Token StringStart v)] in (fst t) : parseCommandName3 (snd t) 3 -- parse string
-  | otherwise = (Token (ErrorToken (Token StringStart v)) "unexpected token"):parseGuardOrCommand xs
-parseCommandName3 ((Token CommandEnd v):xs) 3 = (Token CommandEnd v):parseGuardOrCommand xs
-parseCommandName3 (x:xs) s                         = (Token (ErrorToken x) "unknown token") : parseCommandName3 xs s
+parseCommandName3 ((Token Name v):xs) 0       = (Token Name v):parseCommandName3 xs 0
+parseCommandName3 ((Token Name v):xs) 1       = (Token Name v):parseCommandName3 xs 2
+parseCommandName3 ((Token Assign v):xs) 0     = (Token Assign v):parseCommandName3 xs 1
+parseCommandName3 ((Token StringStart v):xs) 2 = let t = parseString xs [(Token StringStart v)] in (fst t) : parseCommandName3 (snd t) 2 -- parse string
+parseCommandName3 ((Token CommandEnd v):xs) 2 = (Token CommandEnd v):parseGuardOrCommand xs
+parseCommandName3 (x:xs) s                    = (Token (ErrorToken x) "unknown token") : parseCommandName3 xs s
 
