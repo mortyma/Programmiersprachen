@@ -82,7 +82,6 @@ Thread.abort_on_exception=true
 # q = program.queue_for_call('maxnum','1','400','2') { |ret| pp ret; q.kill }
 q = program.queue_for_call('mmap','2,2,2,2,2,2') { |ret| 
   pp ret
-  q.kill
 }
 
 workers = 1.upto(6).map { Thread.new { q.run } }

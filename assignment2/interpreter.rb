@@ -7,7 +7,6 @@ program = parse( ARGF.read )
 
 q = program.queue_for_call('BEGIN') { |ret| 
   puts ret
-  q.kill
 }
 
 workers = 1.upto(6).map { Thread.new { q.run } }

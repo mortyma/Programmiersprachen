@@ -15,8 +15,13 @@ class Program
   # Create a TaskQueue and enqueue specified procedure call
   # @return [TaskQueue]
   def queue_for_call(procname, *args, &block)
-    task = procedures[procname].new_task(nil, *args, &block)
-    TaskQueue.new([task])
+    queue = TaskQueue.new
+    task = procedures[procname].new_task(nil, *args) do |*args|
+      block.call(*args)
+      queue.kill
+    end
+    queue.push(task)
+    queue
   end
 
   # Run specified procedure call
