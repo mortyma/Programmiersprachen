@@ -17,11 +17,11 @@ module LanTokenizer where
 import Data.Char
 
 type TValue = String
-data TType =  TToken [Token] | ProcName | ProcVar | ErrorToken Token | ReservedToken | UnknownToken | WhiteSpace
-  | BlockStart | BlockEnd | StringStart | StringEnd | SubString | String [Token] | OpenString [Token]
-  | Variable | OpenVariable | UnusedVar Token
-  | ProcDelim | GuardDelim | Assign | Equals | NotEquals | Name | CommandEnd deriving (Eq,Show)
-data Token = Token TType TValue deriving (Eq,Show)
+data TType =  UnknownToken | WhiteSpace
+  | BlockStart | BlockEnd | StringStart | StringEnd | SubString
+  | Variable | OpenVariable
+  | ProcDelim | GuardDelim | Assign | Equals | NotEquals | Name | CommandEnd deriving (Eq, Show, Ord)
+data Token = Token TType TValue deriving (Eq,Show,Ord)
 
 
 -- | splits a string into a list of tokens
