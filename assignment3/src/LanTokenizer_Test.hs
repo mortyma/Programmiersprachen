@@ -46,7 +46,7 @@ testTokenize = TestLabel "test for tokenizer" $ TestList [
       ([Token Assign "="])
       (tokenize "="),
    TestCase $ assertEqual "some unknown token x = &&"
-      ([Token Name "x", Token WhiteSpace " ", Token Assign "=", Token WhiteSpace " ", Token UnknownToken "&&"])
+      ([Token Name "x", Token WhiteSpace " ", Token Assign "=", Token WhiteSpace " ", Token Unknown "&&"])
       (tokenize "x = &&"),
    TestCase $ assertEqual "whitespace"
       ([Token WhiteSpace "\v\t "])
