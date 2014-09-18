@@ -1,4 +1,4 @@
------------------------------------------------------------------------------
+
 --
 -- Module      :  LanTokenizer
 -- Copyright   :
@@ -36,25 +36,29 @@ tokenize (x:xs)
   | x == ';' = (Token CommandEnd ";") : tokenize xs
   | x == '{' = (Token BlockStart "{") : tokenize xs
   | x == '}' = (Token BlockEnd "}") : tokenize xs
-  | x == '"' = let p = tokenizeSubString xs "" [] in (Token StringStart "\"") : (snd p) ++ tokenize (fst p)
-  | isAlphaNum x = let p = tokenizeName xs [x] in (snd p) : tokenize (fst p)
-  | x == ' ' || x == '\t' || x == '\n' = let p = tokenizeWhiteSpace xs [x] in (snd p) : tokenize (fst p)
-  | otherwise = let p = tokenizeUnknown xs [x] in (snd p) : tokenize (fst p)
+  | x == '"' = let (remaining, tokens) = tokenizeSubString xs "" [] in (Token StringStart "\"") : tokens ++ tokenize remaining
+  | isAlphaNum x = let (remaining, tokens) = tokenizeName xs [x] in tokens : tokenize remaining
+  | isSpace x = let (remaining, tokens) = tokenizeWhiteSpace xs [x] in tokens : tokenize remaining
+  | otherwise = let (remaining, tokens) = tokenizeUnknown xs [x] in tokens : tokenize remaining
+
+subStringTokensForBuffer :: String -> [Token]
+subStringTokensForBuffer "" = []
+subStringTokensForBuffer b = [Token SubString b]
 
 -- | takes input string, substring buffer, string tokens and returns (remaining string, [found tokens])
 tokenizeSubString :: String -> String -> [Token] -> (String, [Token])
-tokenizeSubString "" b t = ("", t ++ [Token SubString b])
+tokenizeSubString "" b t = ("", t ++ subStringTokensForBuffer b) 
 tokenizeSubString (x:xs) b t
-  | x == '"' = (xs, t ++ [Token SubString b, Token StringEnd "\""] )
-  | x == '$' = let v = tokenizeVariable xs "" in tokenizeSubString (fst v) "" (t ++ [Token SubString b] ++ [snd v])
-  | x == '\\' && length xs > 0 && (head xs == '$' || head xs == '"') = tokenizeSubString (tail xs) (b ++ [x, head xs]) t
+  | x == '"' = (xs, t ++ subStringTokensForBuffer b ++ [Token StringEnd "\""] )
+  | x == '$' = let (remaining, tokens) = tokenizeVariable xs "" in tokenizeSubString remaining "" (t ++ subStringTokensForBuffer b ++ [tokens])
+  | x == '\\' && length xs > 0 = tokenizeSubString (tail xs) (b ++ [x, head xs]) t
   | otherwise = tokenizeSubString xs (b ++ [x]) t
 
 -- | takes input string, var name buffer and returns (remaining string, found token)
 tokenizeVariable :: String -> String -> (String, Token)
 tokenizeVariable "" b = ("", Token OpenVariable ("$" ++b))
 tokenizeVariable (x:xs) b
-  | x == '$' = (xs, Token Variable ('$' : b ++ "$"))
+  | x == '$' = (xs, Token Variable ("$" ++ b ++ "$"))
   | x == '"' = (x:xs, Token OpenVariable ("$" ++ b))
 --  | x == '\\' && length xs > 0 && (head xs == '$' || head xs == '"') = tokenizeVariable (tail xs) (b ++ [x, head xs])
   | otherwise = tokenizeVariable xs (b ++ [x])
