@@ -31,10 +31,10 @@ testTokenize = TestLabel "test for tokenizer" $ TestList [
       ([Token StringStart "\"", Token SubString "foo", Token StringEnd "\""])
       (tokenize "\"foo\""),
     TestCase $ assertEqual "string with var \"fo$x$o\""
-      ([Token StringStart "\"", Token SubString "fo", Token Variable "$x$",  Token SubString "o", Token StringEnd "\""])
+      ([Token StringStart "\"", Token SubString "fo", Token VariableStart "$",Token Variable "x", Token VariableEnd "$", Token SubString "o", Token StringEnd "\""])
       (tokenize "\"fo$x$o\""),
     TestCase $ assertEqual "string with var and spaces \"fo$x$ o\""
-      ([Token StringStart "\"", Token SubString "fo", Token Variable "$x$", Token SubString " o", Token StringEnd "\""])
+      ([Token StringStart "\"", Token SubString "fo", Token VariableStart "$",Token Variable "x", Token VariableEnd "$", Token SubString " o", Token StringEnd "\""])
       (tokenize "\"fo$x$ o\""),
    TestCase $ assertEqual "equals =="
       ([Token Equals "=="])
@@ -46,13 +46,13 @@ testTokenize = TestLabel "test for tokenizer" $ TestList [
       ([Token Assign "="])
       (tokenize "="),
    TestCase $ assertEqual "some unknown token x = &&"
-      ([Token Name "x", Token WhiteSpace " ", Token Assign "=", Token WhiteSpace " ", Token Unknown "&&"])
+      ([Token Name "x", Token WhiteSpace " ", Token Assign "=", Token WhiteSpace " ", Token Unknown "&", Token Unknown "&"])
       (tokenize "x = &&"),
    TestCase $ assertEqual "whitespace"
       ([Token WhiteSpace "\v\t "])
       (tokenize "\v\t "),
    TestCase $ assertEqual "double-\\"
-      ([Token StringStart "\"", Token SubString "\\\\", Token OpenVariable "$", Token StringEnd "\""])
+      ([Token StringStart "\"", Token SubString "\\\\", Token VariableStart "$", Token StringEnd "\""])
       (tokenize "\"\\\\$\""),
     TestCase $ assertEqual "no empty SubString"
       ([Token StringStart "\"", Token StringEnd "\""])
@@ -64,43 +64,42 @@ testTokenize = TestLabel "test for tokenizer" $ TestList [
    TestCase $ assertEqual "short prog (maxnum)"
       ([Token Name "maxnum", Token WhiteSpace " ", Token Name "a", Token WhiteSpace " ", Token Name "b",
         Token WhiteSpace " ", Token ProcDelim "-", Token WhiteSpace " ",
-        Token StringStart "\"", Token Variable "$max$", Token StringEnd "\"",
+        Token StringStart "\"", Token VariableStart "$", Token Variable "max", Token VariableEnd "$", Token StringEnd "\"",
         Token WhiteSpace " ", Token BlockStart "{", Token WhiteSpace " ", Token Name "ab", Token WhiteSpace " ",
         Token Assign "=", Token WhiteSpace " ", Token Name "exec", Token WhiteSpace " ",
-        Token StringStart "\"", Token SubString "test ", Token Variable "$a$", Token SubString " ",
-        Token Variable "$b$", Token SubString " -le ", Token Variable "$b$",
+        Token StringStart "\"", Token SubString "test ", Token VariableStart "$", Token Variable "a", Token VariableEnd "$", Token SubString " ",
+        Token VariableStart "$", Token Variable "b", Token VariableEnd "$", Token SubString " -le ", Token VariableStart "$", Token Variable "b",Token VariableEnd "$", 
         Token StringEnd "\"", Token CommandEnd ";", Token WhiteSpace " ", Token BlockEnd "}"])
-      (tokenize "maxnum a b - \"$max$\" { ab = exec \"test $a$ $b$ -le $b$\"; }")
+      (tokenize "maxnum a b - \"$max$\" { ab = exec \"test $a$ $b$ -le $b$\"; }"),
+    TestCase $ assertEqual "name foO123"
+      ([Token Name "foO123"])
+      (tokenize "foO123"),
+    TestCase $ assertEqual "whitespace tab"
+      ([Token Name "foO", Token WhiteSpace "\t"])
+      (tokenize "foO\t"),
+    TestCase $ assertEqual "comment"
+      ([Token Name "f", Token Comment "#$\t ==\\\\\"", Token WhiteSpace "\n ", Token Name "b"])
+      (tokenize "f#$\t ==\\\\\"\n b")
   ]
 
 testTokenizeVariable = TestLabel "test for variable tokenizer" $ TestList [
     TestCase $ assertEqual "empty input"
-      ("", Token OpenVariable "$")
-      (tokenizeVariable "" ""),
+      ([])
+      (tokenizeVariable ""),
     TestCase $ assertEqual "var only 'x$'"
-      ("", Token Variable "$x$")
-      (tokenizeVariable "x$" ""),
+      ([Token Variable "x", Token VariableEnd "$"])
+      (tokenizeVariable "x$"),
     TestCase $ assertEqual "var and other stuff 'x$ foo'"
-      ("foo", Token Variable "$x$")
-      (tokenizeVariable "x$foo" ""),
+      ([Token Variable "x", Token VariableEnd "$", Token SubString "foo"])
+      (tokenizeVariable "x$foo"),
     TestCase $ assertEqual "open var"
-      ("\" 123", Token OpenVariable "$xy")
-      (tokenizeVariable "xy\" 123" "")
+      ([Token Variable "xy", Token StringEnd "\"",Token WhiteSpace " ", Token Name "123"])
+      (tokenizeVariable "xy\" 123")
   ]
 
-testTokenizeName = TestLabel "test for name tokenizer" $ TestList [
-    TestCase $ assertEqual "empty input"
-      ("", Token Name "")
-      (tokenizeName "" ""),
-    TestCase $ assertEqual "name foO123"
-      ("", Token Name "foO123")
-      (tokenizeName "foO123" ""),
-    TestCase $ assertEqual "name foO 123"
-      (" 123", Token Name "foO")
-      (tokenizeName "foO 123" "")
-  ]
 runTest = defaultMain $ concatMap hUnitTestToTests [
-    testTokenizeVariable, testTokenize, testTokenizeName
+    testTokenize,
+    testTokenizeVariable
   ]
 
 
