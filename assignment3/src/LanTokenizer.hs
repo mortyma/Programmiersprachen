@@ -15,7 +15,7 @@ module LanTokenizer where
 
 import Data.Char
 
-data TType =  Unknown | WhiteSpace | Comment
+data TType =  Unknown | Whitespace | Comment
   | BlockStart | BlockEnd | StringStart | StringEnd | SubString
   | VariableStart | VariableEnd | Variable
   | ProcDelim | GuardDelim | Assign | Equals | NotEquals | Name | CommandEnd deriving (Eq, Show, Ord)
@@ -35,7 +35,7 @@ tokenize (x:xs)
   | x == '}' = (Token BlockEnd "}") : tokenize xs
   | x == '"' = (Token StringStart "\"") : tokenizeString xs
   | isAlphaNum x = let (name, rest) = alNum (x:xs) in (Token Name name) : tokenize rest
-  | isSpace x = let (w, rest) = space (x:xs) in (Token WhiteSpace w) : tokenize rest
+  | isSpace x = let (w, rest) = space (x:xs) in (Token Whitespace w) : tokenize rest
   | x == '#' = let (w, rest) = comment (x:xs) in (Token Comment w) : tokenize rest
   | otherwise = (Token Unknown [x]) : tokenize xs
 

@@ -46,10 +46,10 @@ testTokenize = TestLabel "test for tokenizer" $ TestList [
       ([Token Assign "="])
       (tokenize "="),
    TestCase $ assertEqual "some unknown token x = &&"
-      ([Token Name "x", Token WhiteSpace " ", Token Assign "=", Token WhiteSpace " ", Token Unknown "&", Token Unknown "&"])
+      ([Token Name "x", Token Whitespace " ", Token Assign "=", Token Whitespace " ", Token Unknown "&", Token Unknown "&"])
       (tokenize "x = &&"),
    TestCase $ assertEqual "whitespace"
-      ([Token WhiteSpace "\v\t "])
+      ([Token Whitespace "\v\t "])
       (tokenize "\v\t "),
    TestCase $ assertEqual "double-\\"
       ([Token StringStart "\"", Token SubString "\\\\", Token VariableStart "$", Token StringEnd "\""])
@@ -58,27 +58,27 @@ testTokenize = TestLabel "test for tokenizer" $ TestList [
       ([Token StringStart "\"", Token StringEnd "\""])
       (tokenize "\"\""),
    TestCase $ assertEqual "mixed line a b =   \"foo\""
-      ([Token Name "a", Token WhiteSpace " ", Token Name "b", Token WhiteSpace " ", Token Assign "=",
-        Token WhiteSpace "   ", Token StringStart "\"", Token SubString "foo", Token StringEnd "\""])
+      ([Token Name "a", Token Whitespace " ", Token Name "b", Token Whitespace " ", Token Assign "=",
+        Token Whitespace "   ", Token StringStart "\"", Token SubString "foo", Token StringEnd "\""])
       (tokenize "a b =   \"foo\""),
    TestCase $ assertEqual "short prog (maxnum)"
-      ([Token Name "maxnum", Token WhiteSpace " ", Token Name "a", Token WhiteSpace " ", Token Name "b",
-        Token WhiteSpace " ", Token ProcDelim "-", Token WhiteSpace " ",
+      ([Token Name "maxnum", Token Whitespace " ", Token Name "a", Token Whitespace " ", Token Name "b",
+        Token Whitespace " ", Token ProcDelim "-", Token Whitespace " ",
         Token StringStart "\"", Token VariableStart "$", Token Variable "max", Token VariableEnd "$", Token StringEnd "\"",
-        Token WhiteSpace " ", Token BlockStart "{", Token WhiteSpace " ", Token Name "ab", Token WhiteSpace " ",
-        Token Assign "=", Token WhiteSpace " ", Token Name "exec", Token WhiteSpace " ",
+        Token Whitespace " ", Token BlockStart "{", Token Whitespace " ", Token Name "ab", Token Whitespace " ",
+        Token Assign "=", Token Whitespace " ", Token Name "exec", Token Whitespace " ",
         Token StringStart "\"", Token SubString "test ", Token VariableStart "$", Token Variable "a", Token VariableEnd "$", Token SubString " ",
         Token VariableStart "$", Token Variable "b", Token VariableEnd "$", Token SubString " -le ", Token VariableStart "$", Token Variable "b",Token VariableEnd "$", 
-        Token StringEnd "\"", Token CommandEnd ";", Token WhiteSpace " ", Token BlockEnd "}"])
+        Token StringEnd "\"", Token CommandEnd ";", Token Whitespace " ", Token BlockEnd "}"])
       (tokenize "maxnum a b - \"$max$\" { ab = exec \"test $a$ $b$ -le $b$\"; }"),
     TestCase $ assertEqual "name foO123"
       ([Token Name "foO123"])
       (tokenize "foO123"),
     TestCase $ assertEqual "whitespace tab"
-      ([Token Name "foO", Token WhiteSpace "\t"])
+      ([Token Name "foO", Token Whitespace "\t"])
       (tokenize "foO\t"),
     TestCase $ assertEqual "comment"
-      ([Token Name "f", Token Comment "#$\t ==\\\\\"", Token WhiteSpace "\n ", Token Name "b"])
+      ([Token Name "f", Token Comment "#$\t ==\\\\\"", Token Whitespace "\n ", Token Name "b"])
       (tokenize "f#$\t ==\\\\\"\n b")
   ]
 
@@ -93,7 +93,7 @@ testTokenizeVariable = TestLabel "test for variable tokenizer" $ TestList [
       ([Token Variable "x", Token VariableEnd "$", Token SubString "foo"])
       (tokenizeVariable "x$foo"),
     TestCase $ assertEqual "open var"
-      ([Token Variable "xy", Token StringEnd "\"",Token WhiteSpace " ", Token Name "123"])
+      ([Token Variable "xy", Token StringEnd "\"",Token Whitespace " ", Token Name "123"])
       (tokenizeVariable "xy\" 123")
   ]
 
