@@ -1,4 +1,4 @@
-![build](https://github.com/mortyma/Programmiersprachen/actions/workflows/haskell.yaml/badge.svg)
+![build](https://github.com/mortyma/Programmiersprachen/actions/workflows/haskell.yml/badge.svg)
 
 Programmiersprachen
 ===================
